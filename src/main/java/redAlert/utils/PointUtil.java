@@ -391,12 +391,17 @@ public class PointUtil {
 		}
 		
 		//看看谁上谁下
-		
+
+		// 如果搜索失败(任一中心点为null),直接返回null
+		if(pointLeftCenter == null || pointRightCenter == null) {
+			return null;
+		}
+
 		//左上右下
 		if(pointLeftCenter.y<pointRightCenter.y) {
 			int deltaY = y1-pointLeftCenter.y;
 			int deltaX = pointRightCenter.x-x1;
-			
+
 			if(deltaX>=2*deltaY) {
 				return pointLeftCenter;
 			}else {
@@ -413,8 +418,8 @@ public class PointUtil {
 				return pointLeftCenter;
 			}
 		}
-		
-		
+
+
 		return null;
 	}
 	

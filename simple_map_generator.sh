@@ -1,0 +1,27 @@
+#!/bin/bash
+cd /home/ts/Downloads/JavaRedAlert2
+
+# 生成一个随机变化的地图文件
+cat > test_map.text << 'MAP'
+30,15,clat01.sno$90,15,clat02.sno$150,15,clat03.sno$210,15,clat04.sno$270,15,clat05.sno$330,15,clat06.sno$390,15,clat07.sno$450,15,clat08.sno$510,15,clat09.sno$570,15,clat10.sno$630,15,clat11.sno$690,15,clat12.sno$750,15,clat13.sno$810,15,clat14.sno$870,15,clat15.sno$930,15,clat16.sno$
+30,45,clat05.sno$90,45,clat06.sno$150,45,clat07.sno$210,45,clat08.sno$270,45,clat09.sno$330,45,clat10.sno$390,45,clat11.sno$450,45,clat12.sno$510,45,clat13.sno$570,45,clat14.sno$630,45,clat15.sno$690,45,clat16.sno$750,45,clat01.sno$810,45,clat02.sno$870,45,clat03.sno$930,45,clat04.sno$
+30,75,clat09.sno$90,75,clat10.sno$150,75,clat11.sno$210,75,clat12.sno$270,75,clat13.sno$330,75,clat14.sno$390,75,clat15.sno$450,75,clat16.sno$510,75,clat01.sno$570,75,clat02.sno$630,75,clat03.sno$690,75,clat04.sno$750,75,clat05.sno$810,75,clat06.sno$870,75,clat07.sno$930,75,clat08.sno$
+30,105,clat13.sno$90,105,clat14.sno$150,105,clat15.sno$210,105,clat16.sno$270,105,clat01a.sno$330,105,clat02a.sno$390,105,clat03a.sno$450,105,clat04a.sno$510,105,clat05a.sno$570,105,clat06a.sno$630,105,clat07a.sno$690,105,clat08a.sno$750,105,clat09a.sno$810,105,clat10a.sno$870,105,clat11a.sno$930,105,clat12a.sno$
+30,135,clat01a.sno$90,135,clat02a.sno$150,135,clat03a.sno$210,135,clat04a.sno$270,135,clat05a.sno$330,135,clat06a.sno$390,135,clat07a.sno$450,135,clat08a.sno$510,135,clat09a.sno$570,135,clat10a.sno$630,135,clat11a.sno$690,135,clat12a.sno$750,135,clat13a.sno$810,135,clat14a.sno$870,135,clat15a.sno$930,135,clat16a.sno$
+30,165,clat05a.sno$90,165,clat06a.sno$150,165,clat07a.sno$210,165,clat08a.sno$270,165,clat09a.sno$330,165,clat10a.sno$390,165,clat11a.sno$450,165,clat12a.sno$510,165,clat13a.sno$570,165,clat14a.sno$630,165,clat15a.sno$690,165,clat16a.sno$750,165,clat01.sno$810,165,clat02.sno$870,165,clat03.sno$930,165,clat04.sno$
+30,195,clat09a.sno$90,195,clat10a.sno$150,195,clat11a.sno$210,195,clat12a.sno$270,195,clat13a.sno$330,195,clat14a.sno$390,195,clat15a.sno$450,195,clat16a.sno$510,195,clat01.sno$570,195,clat02.sno$630,195,clat03.sno$690,195,clat04.sno$750,195,clat05.sno$810,195,clat06.sno$870,195,clat07.sno$930,195,clat08.sno$
+30,225,clat13a.sno$90,225,clat14a.sno$150,225,clat15a.sno$210,225,clat16a.sno$270,225,clat01.sno$330,225,clat02.sno$390,225,clat03.sno$450,225,clat04.sno$510,225,clat05.sno$570,225,clat06.sno$630,225,clat07.sno$690,225,clat08.sno$750,225,clat09.sno$810,225,clat10.sno$870,225,clat11.sno$930,225,clat12.sno$
+30,255,clat01.sno$90,255,clat02.sno$150,255,clat03.sno$210,255,clat04.sno$270,255,clat05.sno$330,255,clat06.sno$390,255,clat07.sno$450,255,clat08.sno$510,255,clat09.sno$570,255,clat10.sno$630,255,clat11.sno$690,255,clat12.sno$750,255,clat13.sno$810,255,clat14.sno$870,255,clat15.sno$930,255,clat16.sno$
+60,30,clat02.sno$120,30,clat03.sno$180,30,clat04.sno$240,30,clat05.sno$300,30,clat06.sno$360,30,clat07.sno$420,30,clat08.sno$480,30,clat09.sno$540,30,clat10.sno$600,30,clat11.sno$660,30,clat12.sno$720,30,clat13.sno$780,30,clat14.sno$840,30,clat15.sno$900,30,clat16.sno$
+60,60,clat06.sno$120,60,clat07.sno$180,60,clat08.sno$240,60,clat09.sno$300,60,clat10.sno$360,60,clat11.sno$420,60,clat12.sno$480,60,clat13.sno$540,60,clat14.sno$600,60,clat15.sno$660,60,clat16.sno$720,60,clat01.sno$780,60,clat02.sno$840,60,clat03.sno$900,60,clat04.sno$
+60,90,clat10.sno$120,90,clat11.sno$180,90,clat12.sno$240,90,clat13.sno$300,90,clat14.sno$360,90,clat15.sno$420,90,clat16.sno$480,90,clat01.sno$540,90,clat02.sno$600,90,clat03.sno$660,90,clat04.sno$720,90,clat05.sno$780,90,clat06.sno$840,90,clat07.sno$900,90,clat08.sno$
+60,120,clat14.sno$120,120,clat15.sno$180,120,clat16.sno$240,120,clat01a.sno$300,120,clat02a.sno$360,120,clat03a.sno$420,120,clat04a.sno$480,120,clat05a.sno$540,120,clat06a.sno$600,120,clat07a.sno$660,120,clat08a.sno$720,120,clat09a.sno$780,120,clat10a.sno$840,120,clat11a.sno$900,120,clat12a.sno$
+60,150,clat02a.sno$120,150,clat03a.sno$180,150,clat04a.sno$240,150,clat05a.sno$300,150,clat06a.sno$360,150,clat07a.sno$420,150,clat08a.sno$480,150,clat09a.sno$540,150,clat10a.sno$600,150,clat11a.sno$660,150,clat12a.sno$720,150,clat13a.sno$780,150,clat14a.sno$840,150,clat15a.sno$900,150,clat16a.sno$
+60,180,clat06a.sno$120,180,clat07a.sno$180,180,clat08a.sno$240,180,clat09a.sno$300,180,clat10a.sno$360,180,clat11a.sno$420,180,clat12a.sno$480,180,clat13a.sno$540,180,clat14a.sno$600,180,clat15a.sno$660,180,clat16a.sno$720,180,clat01.sno$780,180,clat02.sno$840,180,clat03.sno$900,180,clat04.sno$
+60,210,clat10a.sno$120,210,clat11a.sno$180,210,clat12a.sno$240,210,clat13a.sno$300,210,clat14a.sno$360,210,clat15a.sno$420,210,clat16a.sno$480,210,clat01.sno$540,210,clat02.sno$600,210,clat03.sno$660,210,clat04.sno$720,210,clat05.sno$780,210,clat06.sno$840,210,clat07.sno$900,210,clat08.sno$
+60,240,clat14a.sno$120,240,clat15a.sno$180,240,clat16a.sno$240,240,clat01.sno$300,240,clat02.sno$360,240,clat03.sno$420,240,clat04.sno$480,240,clat05.sno$540,240,clat06.sno$600,240,clat07.sno$660,240,clat08.sno$720,240,clat09.sno$780,240,clat10.sno$840,240,clat11.sno$900,240,clat12.sno$
+60,270,clat01.sno$120,270,clat02.sno$180,270,clat03.sno$240,270,clat04.sno$300,270,clat05.sno$360,270,clat06.sno$420,270,clat07.sno$480,270,clat08.sno$540,270,clat09.sno$600,270,clat10.sno$660,270,clat11.sno$720,270,clat12.sno$780,270,clat13.sno$840,270,clat14.sno$900,270,clat15.sno$
+MAP
+echo "地图文件已生成: test_map.text"
+cat test_map.text | wc -l
+echo "地形tile数量: $(cat test_map.text | tr '$' '\n' | wc -l)"

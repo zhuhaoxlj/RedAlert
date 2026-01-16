@@ -423,30 +423,76 @@ public class MouseEventDeal {
 					int mapY = coord.getMapY();
 
 					if(SwingUtilities.isRightMouseButton(mouseEvent)){//鼠标右键 - 移动视口
+						System.out.println("=== 右键拖动开始 ===");
+						System.out.println("鼠标当前位置: (" + mouseEvent.getX() + ", " + mouseEvent.getY() + ")");
+						System.out.println("按下点位置: (" + RuntimeParameter.pressX + ", " + RuntimeParameter.pressY + ")");
+
 						// 计算鼠标移动的距离
 						int deltaX = mouseEvent.getX() - RuntimeParameter.pressX;
 						int deltaY = mouseEvent.getY() - RuntimeParameter.pressY;
+						System.out.println("Delta值: deltaX=" + deltaX + ", deltaY=" + deltaY);
 
 						// 移动视口(方向相反)
+						int oldOffX = RuntimeParameter.viewportOffX;
+						int oldOffY = RuntimeParameter.viewportOffY;
 						int newOffX = RuntimeParameter.viewportOffX - deltaX;
 						int newOffY = RuntimeParameter.viewportOffY - deltaY;
+						System.out.println("视口旧位置: (" + oldOffX + ", " + oldOffY + ")");
+						System.out.println("视口新位置(未限制): (" + newOffX + ", " + newOffY + ")");
 
 						// 限制视口范围
-						if(newOffX < 0) newOffX = 0;
-						if(newOffY < 0) newOffY = 0;
-						if(newOffX > SysConfig.gameMapWidth - SysConfig.viewportWidth) {
-							newOffX = SysConfig.gameMapWidth - SysConfig.viewportWidth;
+						int maxX = SysConfig.gameMapWidth - SysConfig.viewportWidth;
+						int maxY = SysConfig.gameMapHeight - SysConfig.viewportHeight;
+						System.out.println("地图尺寸: " + SysConfig.gameMapWidth + "x" + SysConfig.gameMapHeight);
+						System.out.println("视口尺寸: " + SysConfig.viewportWidth + "x" + SysConfig.viewportHeight);
+						System.out.println("视口最大偏移: maxX=" + maxX + ", maxY=" + maxY);
+
+						boolean hitBoundary = false;
+						if(newOffX < 0) {
+							System.out.println("[边界检查] newOffX < 0, 限制为0");
+							newOffX = 0;
+							hitBoundary = true;
 						}
-						if(newOffY > SysConfig.gameMapHeight - SysConfig.viewportHeight) {
-							newOffY = SysConfig.gameMapHeight - SysConfig.viewportHeight;
+						if(newOffY < 0) {
+							System.out.println("[边界检查] newOffY < 0, 限制为0");
+							newOffY = 0;
+							hitBoundary = true;
+						}
+						if(newOffX > maxX) {
+							System.out.println("[边界检查] newOffX > maxX(" + maxX + "), 限制为" + maxX);
+							newOffX = maxX;
+							hitBoundary = true;
+						}
+						if(newOffY > maxY) {
+							System.out.println("[边界检查] newOffY > maxY(" + maxY + "), 限制为" + maxY);
+							newOffY = maxY;
+							hitBoundary = true;
 						}
 
+						// 检查视口是否实际移动
+						boolean viewportMoved = (oldOffX != newOffX || oldOffY != newOffY);
+
+						// 始终更新视口偏移（即使到达边界也要更新为限制后的值）
 						RuntimeParameter.viewportOffX = newOffX;
 						RuntimeParameter.viewportOffY = newOffY;
 
-						// 更新按下点为当前位置,实现连续拖动
-						RuntimeParameter.pressX = mouseEvent.getX();
-						RuntimeParameter.pressY = mouseEvent.getY();
+						// 最终安全检查：确保视口偏移绝对不会超出边界
+						// 这是为了防止任何计算错误导致视口超出范围
+						if(RuntimeParameter.viewportOffX < 0) RuntimeParameter.viewportOffX = 0;
+						if(RuntimeParameter.viewportOffY < 0) RuntimeParameter.viewportOffY = 0;
+						if(RuntimeParameter.viewportOffX > maxX) RuntimeParameter.viewportOffX = maxX;
+						if(RuntimeParameter.viewportOffY > maxY) RuntimeParameter.viewportOffY = maxY;
+
+						// 只在视口实际移动时才更新pressX和pressY
+						// 如果视口没有移动(到达边界),则不更新,这样可以立即反向拖动
+						if(viewportMoved) {
+							// 更新按下点为当前位置,实现连续拖动
+							RuntimeParameter.pressX = mouseEvent.getX();
+							RuntimeParameter.pressY = mouseEvent.getY();
+						}
+						System.out.println("视口最终位置: (" + RuntimeParameter.viewportOffX + ", " + RuntimeParameter.viewportOffY + ")");
+						System.out.println("是否触发边界: " + hitBoundary);
+						System.out.println("=== 右键拖动结束 ===");
 						return;
 					}
 
@@ -490,11 +536,16 @@ public class MouseEventDeal {
 			 */
 			@Override
 			public void mouseMoved(MouseEvent mouseEvent) {
-				
+
 				try {
 					Coordinate coord = CoordinateUtil.getCoordinate(mouseEvent);
 					int mapX = coord.getMapX();
 					int mapY = coord.getMapY();
+
+					// 添加日志: 鼠标移动时打印视口和地图坐标
+					System.out.println("[mouseMoved] 屏幕坐标: (" + mouseEvent.getX() + ", " + mouseEvent.getY() + ")" +
+							", 地图坐标: (" + mapX + ", " + mapY + ")" +
+							", 视口偏移: (" + RuntimeParameter.viewportOffX + ", " + RuntimeParameter.viewportOffY + ")");
 					
 					/**
 					 * 建造状态的判定优先级最高
@@ -526,6 +577,8 @@ public class MouseEventDeal {
 					CenterPoint centerPoint = PointUtil.getCenterPoint(mapX, mapY);
 					// 如果鼠标在地图边缘外,centerPoint可能为null
 					if(centerPoint == null) {
+						System.out.println("[mouseMoved] CenterPoint为null! 地图坐标: (" + mapX + ", " + mapY + "), 视口偏移: (" +
+								RuntimeParameter.viewportOffX + ", " + RuntimeParameter.viewportOffY + ")");
 						// 隐藏之前显示的血条
 						if(mouseBloodable != null) {
 							if(!mouseBloodable.equals(ShapeUnitResourceCenter.selectedBuilding) &&

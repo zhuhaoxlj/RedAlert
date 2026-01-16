@@ -24,7 +24,7 @@ public class GlobalConfig {
 	/**
 	 * 地图文件路径
 	 */
-	public static String mapFilePath = "E:/gmap.text";
+	public static String mapFilePath = "test_map.text";
 	
 	
 	
