@@ -706,39 +706,39 @@ class PanelGlListener implements GLEventListener{
 	private void drawDigit(GL2 gl, int digit, int x, int y, int size) {
 		gl.glLineWidth(2.0f);
 
-		// 数字线段定义
+		// 数字线段定义 (使用标准7段数码管: A=上, B=右上, C=右下, D=下, E=左下, F=左上, G=中)
 		boolean[][] digits = {
-			{true, true, true, false, true, true, true}, // 0
-			{false, true, false, false, true, false, false}, // 1
-			{true, true, false, true, false, true, true}, // 2
-			{true, true, false, true, true, true, false}, // 3
-			{false, true, true, true, true, false, false}, // 4
-			{true, false, true, true, true, false, true}, // 5
-			{true, false, true, true, true, true, true}, // 6
-			{true, true, false, false, true, false, false}, // 7
-			{true, true, true, true, true, true, true}, // 8
-			{true, true, true, true, true, false, true}  // 9
+			{true, true, true, true, true, true, false}, // 0: ABCDEF
+			{false, true, true, false, false, false, false}, // 1: BC
+			{true, true, false, true, true, false, true}, // 2: ABDEG
+			{true, true, true, true, false, false, true}, // 3: ABCDG
+			{false, true, true, false, false, true, true}, // 4: BCFG
+			{true, false, true, true, false, true, true}, // 5: ACDFG
+			{true, false, true, true, true, true, true}, // 6: ACDEFG
+			{true, true, true, false, false, false, false}, // 7: ABC
+			{true, true, true, true, true, true, true}, // 8: ABCDEFG
+			{true, true, true, true, false, true, true}  // 9: ABCDFG
 		};
 
 		if(digit < 0 || digit > 9) return;
 
-		boolean[] segments = digits[digit];
+		boolean[] seg = digits[digit];
 
 		// 绘制7段数码管
-		// 上横
-		if(segments[0]) drawLine(gl, x, y + size, x + size, y + size);
-		// 右上竖
-		if(segments[1]) drawLine(gl, x + size, y + size, x + size, y + size/2);
-		// 右下竖
-		if(segments[2]) drawLine(gl, x + size, y + size/2, x + size, y);
-		// 下横
-		if(segments[3]) drawLine(gl, x, y, x + size, y);
-		// 左下竖
-		if(segments[4]) drawLine(gl, x, y + size/2, x, y);
-		// 左上竖
-		if(segments[5]) drawLine(gl, x, y + size/2, x, y + size);
-		// 中横
-		if(segments[6]) drawLine(gl, x, y + size/2, x + size, y + size/2);
+		// A - 上横
+		if(seg[0]) drawLine(gl, x, y + size, x + size, y + size);
+		// B - 右上竖
+		if(seg[1]) drawLine(gl, x + size, y + size, x + size, y + size/2);
+		// C - 右下竖
+		if(seg[2]) drawLine(gl, x + size, y + size/2, x + size, y);
+		// D - 下横
+		if(seg[3]) drawLine(gl, x, y, x + size, y);
+		// E - 左下竖
+		if(seg[4]) drawLine(gl, x, y + size/2, x, y);
+		// F - 左上竖
+		if(seg[5]) drawLine(gl, x, y + size/2, x, y + size);
+		// G - 中横
+		if(seg[6]) drawLine(gl, x, y + size/2, x + size, y + size/2);
 
 		gl.glLineWidth(1.0f);
 	}
