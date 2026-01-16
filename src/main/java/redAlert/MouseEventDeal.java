@@ -182,8 +182,13 @@ public class MouseEventDeal {
 									return;
 								}else {//控制此前选中的单位移动到指定点
 									RuntimeParameter.mouseStatus = MouseStatus.UnitMove;
-									
+
 									CenterPoint targetCp = PointUtil.getCenterPoint(coord.getMapX(), coord.getMapY());
+									// 如果点击位置无效,不执行移动
+									if(targetCp == null) {
+										return;
+									}
+
 									List<MovableUnit> units = ShapeUnitResourceCenter.selectedMovableUnits;
 									if(units.size()==1) {
 										MovableUnit moveUnit = units.get(0);
@@ -240,13 +245,17 @@ public class MouseEventDeal {
 							}
 							return;
 						}
-						
-						
+
+
 						/**
 						 * 用户指挥单位进行移动
 						 */
 						if(RuntimeParameter.mouseStatus==MouseStatus.UnitMove) {
 							CenterPoint targetCp = PointUtil.getCenterPoint(coord.getMapX(), coord.getMapY());
+							// 如果点击位置无效,不执行移动
+							if(targetCp == null) {
+								return;
+							}
 							List<MovableUnit> units = ShapeUnitResourceCenter.selectedMovableUnits;
 							if(units.size()==1) {
 								MovableUnit moveUnit = units.get(0);
@@ -289,6 +298,10 @@ public class MouseEventDeal {
 						 */
 						if(RuntimeParameter.mouseStatus==MouseStatus.UnitExpand) {
 							CenterPoint targetCp = PointUtil.getCenterPoint(coord.getMapX(), coord.getMapY());
+							// 如果点击位置无效,不执行展开
+							if(targetCp == null) {
+								return;
+							}
 							ShapeUnit shapeUnit = targetCp.mouseClickGetUnit();
 							if(shapeUnit instanceof Expandable) {
 								Expandable exUnit = (Expandable)shapeUnit;
@@ -306,6 +319,10 @@ public class MouseEventDeal {
 						 */
 						if(RuntimeParameter.mouseStatus==MouseStatus.Sell) {
 							CenterPoint targetCp = PointUtil.getCenterPoint(coord.getMapX(), coord.getMapY());
+							// 如果点击位置无效,不执行贱卖
+							if(targetCp == null) {
+								return;
+							}
 							ShapeUnit shapeUnit = targetCp.mouseClickGetUnit();
 							if(shapeUnit instanceof Building) {
 								Building unit = (Building)shapeUnit;
@@ -442,6 +459,11 @@ public class MouseEventDeal {
 								RuntimeParameter.lastMoveY = mapY;
 
 								CenterPoint centerPoint = PointUtil.getCenterPoint(mapX, mapY);
+								// 如果在地图边缘外,不更新中心点
+								if(centerPoint == null) {
+									return;
+								}
+
 								CenterPoint lastCenterPoint = RuntimeParameter.lastMoveCenterPoint;
 								if(centerPoint.equals(lastCenterPoint)) {
 									return;
@@ -483,8 +505,13 @@ public class MouseEventDeal {
 						}else {
 							RuntimeParameter.lastMoveX = mapX;
 							RuntimeParameter.lastMoveY = mapY;
-							
+
 							CenterPoint centerPoint = PointUtil.getCenterPoint(mapX, mapY);
+							// 如果在地图边缘外,不更新中心点
+							if(centerPoint == null) {
+								return;
+							}
+
 							CenterPoint lastCenterPoint = RuntimeParameter.lastMoveCenterPoint;
 							if(centerPoint.equals(lastCenterPoint)) {
 								return;
@@ -494,9 +521,23 @@ public class MouseEventDeal {
 							return;
 						}
 					}
-					
+
 					//显示鼠标下的单位的血条
 					CenterPoint centerPoint = PointUtil.getCenterPoint(mapX, mapY);
+					// 如果鼠标在地图边缘外,centerPoint可能为null
+					if(centerPoint == null) {
+						// 隐藏之前显示的血条
+						if(mouseBloodable != null) {
+							if(!mouseBloodable.equals(ShapeUnitResourceCenter.selectedBuilding) &&
+							   !ShapeUnitResourceCenter.selectedMovableUnits.contains(mouseBloodable)) {
+								mouseBloodable.getBloodBar().setVisible(false);
+							}
+							mouseBloodable = null;
+						}
+						resetMouseStatus(coord);
+						return;
+					}
+
 					if(centerPoint.isExistSingleSelectUnit()) {
 						ShapeUnit unit = centerPoint.mouseClickGetUnit();
 						
@@ -563,12 +604,17 @@ public class MouseEventDeal {
 	 * 外部环境是指:比如点击了修理或卖建筑按钮、当前有选中单位、鼠标下方有单位等等
 	 */
 	public static void resetMouseStatus(Coordinate coord) {
-		
+
 		int mapX = coord.getMapX();
 		int mapY = coord.getMapY();
-		
+
 		CenterPoint centerPoint = PointUtil.getCenterPoint(mapX, mapY);
-		
+
+		// 如果鼠标在地图边缘外,不处理
+		if(centerPoint == null) {
+			return;
+		}
+
 		if(OptionsPanel.sellLabel.isSelected()) {//用户点击了卖建筑按钮
 			Building building = centerPoint.getBuilding();
 			
