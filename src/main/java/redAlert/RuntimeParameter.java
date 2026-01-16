@@ -118,6 +118,12 @@ public class RuntimeParameter {
 	 */
 	public static long frameCount = 0;
 	/**
+	 * FPS计算相关字段
+	 */
+	public static long lastFPSTime = System.currentTimeMillis();
+	public static int currentFPS = 60;
+	public static long lastFrameCount = 0;
+	/**
 	 * 鼠标在游戏场景界面按下时坐标
 	 * 触发mousePressed事件时更新
 	 */

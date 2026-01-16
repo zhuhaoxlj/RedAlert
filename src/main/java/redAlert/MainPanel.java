@@ -533,9 +533,8 @@ public class MainPanel extends GLJPanel{
  */
 class PanelGlListener implements GLEventListener{
 
-	
 	public MainPanel panel = null;
-	
+
 	public PanelGlListener(MainPanel panel) {
 		this.panel = panel;
 	}
@@ -565,11 +564,11 @@ class PanelGlListener implements GLEventListener{
 		GL2 gl = drawable.getGL().getGL2();
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);//设置glClear函数调用时覆盖颜色缓冲区的颜色值
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);//清除颜色缓冲区和深度缓冲区
-		
+
         //获取视口偏移,由于这两个变量变化频繁,所以需要获取一个快照,否则移动视口内容会抖动
 		int theSightOffX = RuntimeParameter.viewportOffX;
 		int theSightOffY = RuntimeParameter.viewportOffY;
-		
+
 		//绘制地形（地形的代码块覆盖全图,所以就不用重新清空画板了）
 		panel.drawTerrain(drawable,theSightOffX,theSightOffY);
 		//绘制游戏内的ShapeUnit
@@ -580,17 +579,178 @@ class PanelGlListener implements GLEventListener{
 		panel.drawSelectRect(drawable);
 		//绘制鼠标指针
 		panel.drawMouseCursor(drawable);
-		
+
+		// 计算FPS
 		RuntimeParameter.frameCount++;
+		long currentTime = System.currentTimeMillis();
+		long elapsedTime = currentTime - RuntimeParameter.lastFPSTime;
+
+		// 每秒更新一次FPS
+		if(elapsedTime >= 1000) {
+			long framesSinceLastUpdate = RuntimeParameter.frameCount - RuntimeParameter.lastFrameCount;
+			RuntimeParameter.currentFPS = (int)((framesSinceLastUpdate * 1000) / elapsedTime);
+			RuntimeParameter.lastFPSTime = currentTime;
+			RuntimeParameter.lastFrameCount = RuntimeParameter.frameCount;
+		}
+
+		// 绘制FPS显示
+		drawFPS(gl, drawable.getSurfaceWidth(), drawable.getSurfaceHeight());
 	}
 
 	@Override
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-		
+
 	}
 	@Override
 	public void dispose(GLAutoDrawable drawable) {
-		
+
+	}
+
+	/**
+	 * 绘制FPS显示
+	 */
+	private void drawFPS(GL2 gl, int screenWidth, int screenHeight) {
+		// 更新窗口标题栏显示FPS
+		String fpsText = "红色警戒 - FPS: " + RuntimeParameter.currentFPS;
+		java.awt.Container container = panel.getTopLevelAncestor();
+		if(container instanceof javax.swing.JFrame) {
+			((javax.swing.JFrame)container).setTitle(fpsText);
+		}
+
+		// 保存当前的OpenGL状态
+		gl.glPushAttrib(GL2.GL_ALL_ATTRIB_BITS);
+
+		// 切换到2D正交投影
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+		gl.glPushMatrix();
+		gl.glLoadIdentity();
+		gl.glOrtho(0, screenWidth, 0, screenHeight, -1, 1);
+
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		gl.glPushMatrix();
+		gl.glLoadIdentity();
+
+		// 禁用深度测试，确保FPS显示在最上层
+		gl.glDisable(GL2.GL_DEPTH_TEST);
+		gl.glDisable(GL2.GL_LIGHTING);
+		gl.glDisable(GL2.GL_TEXTURE_2D);
+
+		// 绘制半透明背景框
+		int fpsTextWidth = 120;
+		int fpsTextHeight = 34;
+		int padding = 5;
+		int boxX = 10;
+		int boxY = screenHeight - fpsTextHeight - padding * 2;
+
+		gl.glEnable(GL2.GL_BLEND);
+		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+		gl.glColor4f(0.0f, 0.0f, 0.0f, 0.6f); // 黑色半透明背景
+		gl.glBegin(GL2.GL_QUADS);
+		gl.glVertex2i(boxX, boxY);
+		gl.glVertex2i(boxX + fpsTextWidth + padding * 2, boxY);
+		gl.glVertex2i(boxX + fpsTextWidth + padding * 2, boxY + fpsTextHeight + padding * 2);
+		gl.glVertex2i(boxX, boxY + fpsTextHeight + padding * 2);
+		gl.glEnd();
+		gl.glDisable(GL2.GL_BLEND);
+
+		// 绘制简单的FPS指示器（用颜色块代替文本）
+		int fps = RuntimeParameter.currentFPS;
+
+		// 根据FPS设置颜色
+		float r, g, b;
+		if(fps >= 55) {
+			r = 0.0f; g = 1.0f; b = 0.0f; // 绿色 - 流畅
+		} else if(fps >= 30) {
+			r = 1.0f; g = 1.0f; b = 0.0f; // 黄色 - 一般
+		} else {
+			r = 1.0f; g = 0.0f; b = 0.0f; // 红色 - 卡顿
+		}
+
+		// 绘制FPS指示器条
+		int barHeight = (fps * fpsTextHeight) / 60; // 按60FPS为基准
+		barHeight = Math.min(barHeight, fpsTextHeight);
+
+		gl.glColor3f(r, g, b);
+		gl.glBegin(GL2.GL_QUADS);
+		gl.glVertex2i(boxX + padding, boxY + padding);
+		gl.glVertex2i(boxX + padding + 15, boxY + padding);
+		gl.glVertex2i(boxX + padding + 15, boxY + padding + barHeight);
+		gl.glVertex2i(boxX + padding, boxY + padding + barHeight);
+		gl.glEnd();
+
+		// 绘制FPS数字（简单的线条绘制）
+		gl.glColor3f(1.0f, 1.0f, 1.0f); // 白色数字
+		int digitX = boxX + padding + 20;
+		int digitY = boxY + padding + 2;
+		int digitSize = 10;
+		int digitSpacing = 12;
+
+		// 绘制FPS数字
+		String fpsStr = String.valueOf(fps);
+		for(int i = 0; i < fpsStr.length(); i++) {
+			drawDigit(gl, fpsStr.charAt(i) - '0', digitX + i * digitSpacing, digitY, digitSize);
+		}
+
+		// 恢复OpenGL状态
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+		gl.glPopMatrix();
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		gl.glPopMatrix();
+
+		gl.glPopAttrib();
+	}
+
+	/**
+	 * 绘制单个数字（0-9）
+	 */
+	private void drawDigit(GL2 gl, int digit, int x, int y, int size) {
+		gl.glLineWidth(2.0f);
+
+		// 数字线段定义
+		boolean[][] digits = {
+			{true, true, true, false, true, true, true}, // 0
+			{false, true, false, false, true, false, false}, // 1
+			{true, true, false, true, false, true, true}, // 2
+			{true, true, false, true, true, true, false}, // 3
+			{false, true, true, true, true, false, false}, // 4
+			{true, false, true, true, true, false, true}, // 5
+			{true, false, true, true, true, true, true}, // 6
+			{true, true, false, false, true, false, false}, // 7
+			{true, true, true, true, true, true, true}, // 8
+			{true, true, true, true, true, false, true}  // 9
+		};
+
+		if(digit < 0 || digit > 9) return;
+
+		boolean[] segments = digits[digit];
+
+		// 绘制7段数码管
+		// 上横
+		if(segments[0]) drawLine(gl, x, y + size, x + size, y + size);
+		// 右上竖
+		if(segments[1]) drawLine(gl, x + size, y + size, x + size, y + size/2);
+		// 右下竖
+		if(segments[2]) drawLine(gl, x + size, y + size/2, x + size, y);
+		// 下横
+		if(segments[3]) drawLine(gl, x, y, x + size, y);
+		// 左下竖
+		if(segments[4]) drawLine(gl, x, y + size/2, x, y);
+		// 左上竖
+		if(segments[5]) drawLine(gl, x, y + size/2, x, y + size);
+		// 中横
+		if(segments[6]) drawLine(gl, x, y + size/2, x + size, y + size/2);
+
+		gl.glLineWidth(1.0f);
+	}
+
+	/**
+	 * 绘制线条
+	 */
+	private void drawLine(GL2 gl, int x1, int y1, int x2, int y2) {
+		gl.glBegin(GL2.GL_LINES);
+		gl.glVertex2i(x1, y1);
+		gl.glVertex2i(x2, y2);
+		gl.glEnd();
 	}
 }
 
