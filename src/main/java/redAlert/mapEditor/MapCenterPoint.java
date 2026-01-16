@@ -1,5 +1,7 @@
 package redAlert.mapEditor;
 
+import redAlert.enums.OverlayType;
+
 import java.util.Objects;
 
 /**
@@ -27,6 +29,10 @@ public class MapCenterPoint {
 	 * 地形类型
 	 */
 	private Object terrainType;
+	/**
+	 * 覆盖物类型
+	 */
+	private OverlayType overlayType;
 	
 	
 	
@@ -133,6 +139,14 @@ public class MapCenterPoint {
 
 	public void setTerrainType(Object terrainType) {
 		this.terrainType = terrainType;
+	}
+
+	public OverlayType getOverlayType() {
+		return overlayType;
+	}
+
+	public void setOverlayType(OverlayType overlayType) {
+		this.overlayType = overlayType;
 	}
 
 	@Override
