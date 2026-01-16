@@ -126,7 +126,25 @@ public class MainPanelJava extends JPanel{
 				terrainImageList.add(TmpFileReader.test("clat14a.sno"));
 				terrainImageList.add(TmpFileReader.test("clat15a.sno"));
 				terrainImageList.add(TmpFileReader.test("clat16a.sno"));
-				
+
+				// 加载草地/地形瓦片
+				terrainImageList.add(TmpFileReader.test("clat01.tem"));
+				terrainImageList.add(TmpFileReader.test("clat02.tem"));
+				terrainImageList.add(TmpFileReader.test("clat03.tem"));
+				terrainImageList.add(TmpFileReader.test("clat04.tem"));
+				terrainImageList.add(TmpFileReader.test("clat05.tem"));
+				terrainImageList.add(TmpFileReader.test("clat06.tem"));
+				terrainImageList.add(TmpFileReader.test("clat07.tem"));
+				terrainImageList.add(TmpFileReader.test("clat08.tem"));
+				terrainImageList.add(TmpFileReader.test("clat09.tem"));
+				terrainImageList.add(TmpFileReader.test("clat10.tem"));
+				terrainImageList.add(TmpFileReader.test("clat11.tem"));
+				terrainImageList.add(TmpFileReader.test("clat12.tem"));
+				terrainImageList.add(TmpFileReader.test("clat13.tem"));
+				terrainImageList.add(TmpFileReader.test("clat14.tem"));
+				terrainImageList.add(TmpFileReader.test("clat15.tem"));
+				terrainImageList.add(TmpFileReader.test("clat16.tem"));
+
 				terrainNameList.add(("clat01.sno"));
 				terrainNameList.add(("clat02.sno"));
 				terrainNameList.add(("clat03.sno"));
@@ -160,8 +178,27 @@ public class MainPanelJava extends JPanel{
 				terrainNameList.add(("clat14a.sno"));
 				terrainNameList.add(("clat15a.sno"));
 				terrainNameList.add(("clat16a.sno"));
-				
-				
+
+				// 添加草地瓦片名称
+				terrainNameList.add(("clat01.tem"));
+				terrainNameList.add(("clat02.tem"));
+				terrainNameList.add(("clat03.tem"));
+				terrainNameList.add(("clat04.tem"));
+				terrainNameList.add(("clat05.tem"));
+				terrainNameList.add(("clat06.tem"));
+				terrainNameList.add(("clat07.tem"));
+				terrainNameList.add(("clat08.tem"));
+				terrainNameList.add(("clat09.tem"));
+				terrainNameList.add(("clat10.tem"));
+				terrainNameList.add(("clat11.tem"));
+				terrainNameList.add(("clat12.tem"));
+				terrainNameList.add(("clat13.tem"));
+				terrainNameList.add(("clat14.tem"));
+				terrainNameList.add(("clat15.tem"));
+				terrainNameList.add(("clat16.tem"));
+
+
+
 				//读取地图文件
 				String mapText = FileUtils.readFileToString(new File(GlobalConfig.mapFilePath), "UTF-8");
 				String [] strs = StringUtils.split(mapText,"$");

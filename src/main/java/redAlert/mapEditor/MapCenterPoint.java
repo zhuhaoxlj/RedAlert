@@ -23,6 +23,10 @@ public class MapCenterPoint {
 	 * 瓦片
 	 */
 	public Tile tile;
+	/**
+	 * 地形类型
+	 */
+	private Object terrainType;
 	
 	
 	
@@ -122,7 +126,15 @@ public class MapCenterPoint {
 	public void setY(int y) {
 		this.y = y;
 	}
-	
+
+	public Object getTerrainType() {
+		return terrainType;
+	}
+
+	public void setTerrainType(Object terrainType) {
+		this.terrainType = terrainType;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(x, y);

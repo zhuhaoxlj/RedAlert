@@ -53,23 +53,24 @@ public class TilesSourceCenter {
 			terrainImageList.add(new Tile("clat14a.sno","1011"));
 			terrainImageList.add(new Tile("clat15a.sno","0111"));
 			terrainImageList.add(new Tile("clat16a.sno","1111"));
-			
-//			terrainImageList.add(new Tile("clat01.tem","0000"));
-//			terrainImageList.add(new Tile("clat02.tem","1000"));
-//			terrainImageList.add(new Tile("clat03.tem","0100"));
-//			terrainImageList.add(new Tile("clat04.tem","1100"));
-//			terrainImageList.add(new Tile("clat05.tem","0010"));
-//			terrainImageList.add(new Tile("clat06.tem","1010"));
-//			terrainImageList.add(new Tile("clat07.tem","0110"));
-//			terrainImageList.add(new Tile("clat08.tem","1110"));
-//			terrainImageList.add(new Tile("clat09.tem","0001"));
-//			terrainImageList.add(new Tile("clat10.tem","1001"));
-//			terrainImageList.add(new Tile("clat11.tem","0101"));
-//			terrainImageList.add(new Tile("clat12.tem","1101"));
-//			terrainImageList.add(new Tile("clat13.tem","0011"));
-//			terrainImageList.add(new Tile("clat14.tem","1011"));
-//			terrainImageList.add(new Tile("clat15.tem","0111"));
-//			terrainImageList.add(new Tile("clat16.tem","1111"));
+
+			// 地形瓦片（草地/ Temperate）
+			terrainImageList.add(new Tile("clat01.tem","0000"));
+			terrainImageList.add(new Tile("clat02.tem","1000"));
+			terrainImageList.add(new Tile("clat03.tem","0100"));
+			terrainImageList.add(new Tile("clat04.tem","1100"));
+			terrainImageList.add(new Tile("clat05.tem","0010"));
+			terrainImageList.add(new Tile("clat06.tem","1010"));
+			terrainImageList.add(new Tile("clat07.tem","0110"));
+			terrainImageList.add(new Tile("clat08.tem","1110"));
+			terrainImageList.add(new Tile("clat09.tem","0001"));
+			terrainImageList.add(new Tile("clat10.tem","1001"));
+			terrainImageList.add(new Tile("clat11.tem","0101"));
+			terrainImageList.add(new Tile("clat12.tem","1101"));
+			terrainImageList.add(new Tile("clat13.tem","0011"));
+			terrainImageList.add(new Tile("clat14.tem","1011"));
+			terrainImageList.add(new Tile("clat15.tem","0111"));
+			terrainImageList.add(new Tile("clat16.tem","1111"));
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
