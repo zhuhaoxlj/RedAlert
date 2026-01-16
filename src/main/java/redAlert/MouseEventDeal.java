@@ -404,7 +404,35 @@ public class MouseEventDeal {
 					Coordinate coord = CoordinateUtil.getCoordinate(mouseEvent);
 					int mapX = coord.getMapX();
 					int mapY = coord.getMapY();
-					
+
+					if(SwingUtilities.isRightMouseButton(mouseEvent)){//鼠标右键 - 移动视口
+						// 计算鼠标移动的距离
+						int deltaX = mouseEvent.getX() - RuntimeParameter.pressX;
+						int deltaY = mouseEvent.getY() - RuntimeParameter.pressY;
+
+						// 移动视口(方向相反)
+						int newOffX = RuntimeParameter.viewportOffX - deltaX;
+						int newOffY = RuntimeParameter.viewportOffY - deltaY;
+
+						// 限制视口范围
+						if(newOffX < 0) newOffX = 0;
+						if(newOffY < 0) newOffY = 0;
+						if(newOffX > SysConfig.gameMapWidth - SysConfig.viewportWidth) {
+							newOffX = SysConfig.gameMapWidth - SysConfig.viewportWidth;
+						}
+						if(newOffY > SysConfig.gameMapHeight - SysConfig.viewportHeight) {
+							newOffY = SysConfig.gameMapHeight - SysConfig.viewportHeight;
+						}
+
+						RuntimeParameter.viewportOffX = newOffX;
+						RuntimeParameter.viewportOffY = newOffY;
+
+						// 更新按下点为当前位置,实现连续拖动
+						RuntimeParameter.pressX = mouseEvent.getX();
+						RuntimeParameter.pressY = mouseEvent.getY();
+						return;
+					}
+
 					if(SwingUtilities.isLeftMouseButton(mouseEvent)){//鼠标左键
 						if(RuntimeParameter.mouseStatus==MouseStatus.Construct) {
 							if(mapX==RuntimeParameter.lastMoveX && mapY==RuntimeParameter.lastMoveY) {
@@ -412,7 +440,7 @@ public class MouseEventDeal {
 							}else {
 								RuntimeParameter.lastMoveX = mapX;
 								RuntimeParameter.lastMoveY = mapY;
-								
+
 								CenterPoint centerPoint = PointUtil.getCenterPoint(mapX, mapY);
 								CenterPoint lastCenterPoint = RuntimeParameter.lastMoveCenterPoint;
 								if(centerPoint.equals(lastCenterPoint)) {
