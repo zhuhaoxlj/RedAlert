@@ -188,22 +188,37 @@ public class MainPanel extends GLJPanel{
 				//读取地图文件
 				String mapText = FileUtils.readFileToString(new File(GlobalConfig.mapFilePath), "UTF-8");
 				String [] strs = StringUtils.split(mapText,"$");
-				
+
 				Graphics2D g2d = canvas.createGraphics();
-				
+
 				for(int i=0;i<strs.length;i++) {
 					String info = strs[i];
+					// 跳过空字符串(可能由文件末尾换行符导致)
+					if(StringUtils.isBlank(info)) {
+						continue;
+					}
+
 					String [] infos = StringUtils.split(info,",");
-					int x = Integer.valueOf(infos[0]);
-					int y = Integer.valueOf(infos[1]);
-					String name = infos[2];
-					
-					int index = terrainNameList.indexOf(name);
-					CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
-					cp.setTileIndex(index);
-					BufferedImage image = terrainImageList.get(index);
-					g2d.drawImage(image, cp.getX()-30, cp.getY()-15, null);
-					
+					if(infos.length < 3) {
+						continue; // 跳过格式不正确的行
+					}
+
+					try {
+						int x = Integer.valueOf(infos[0].trim());
+						int y = Integer.valueOf(infos[1].trim());
+						String name = infos[2].trim();
+
+						int index = terrainNameList.indexOf(name);
+						if(index >= 0) { // 检查地形是否存在
+							CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
+							cp.setTileIndex(index);
+							BufferedImage image = terrainImageList.get(index);
+							g2d.drawImage(image, cp.getX()-30, cp.getY()-15, null);
+						}
+					} catch (NumberFormatException e) {
+						System.err.println("解析地图数据失败: " + info);
+						e.printStackTrace();
+					}
 				}
 				g2d.dispose();
 			}
