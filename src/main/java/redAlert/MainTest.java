@@ -1,6 +1,9 @@
 package redAlert;
 
 import java.awt.BorderLayout;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -28,6 +31,138 @@ import redAlert.utils.PointUtil;
  *
  */
 public class MainTest {
+
+	/**
+	 * 生成红警风格的自然地图
+	 * 参考红警原版实现：
+	 * 1. 使用智能边匹配算法
+	 * 2. 创建大的连续地形区域
+	 * 3. 瓦片之间无缝衔接
+	 */
+	private static void generateGrassMap() {
+		try {
+			File mapFile = new File(GlobalConfig.mapFilePath);
+			FileWriter writer = new FileWriter(mapFile);
+
+			// 16种草地瓦片
+			String[] grassTiles = {
+				"clat01.tem", "clat02.tem", "clat03.tem", "clat04.tem",
+				"clat05.tem", "clat06.tem", "clat07.tem", "clat08.tem",
+				"clat09.tem", "clat10.tem", "clat11.tem", "clat12.tem",
+				"clat13.tem", "clat14.tem", "clat15.tem", "clat16.tem"
+			};
+
+			// 简化：使用Perlin噪声思想创建自然分布
+			// 先用少量噪声确定大致区域，再填充细节
+			java.util.Random random = new java.util.Random(42); // 固定种子保证可重现
+
+			// 创建地形图（模拟区域分布）
+			String[][] tileMap = new String[50][50];
+
+			// 第一阶段：创建大的区域（模拟红警的区域化地形）
+			for(int m = 0; m < 50; m++) {
+				for(int n = 0; n < 50; n++) {
+					// 使用简单的噪声函数创建区域
+					double noise = calculateNoise(m, n, 0.1); // 低频率 = 大区域
+
+					// 将噪声映射到瓦片索引
+					// clat01-08 主要，clat09-16 较少
+					int tileIndex;
+					if (noise < 0.3) {
+						tileIndex = 0; // clat01 - 最常见
+					} else if (noise < 0.5) {
+						tileIndex = 1 + (int)((noise - 0.3) * 10) % 7; // clat02-08
+					} else {
+						tileIndex = 8 + (int)((noise - 0.5) * 16) % 8; // clat09-16
+					}
+
+					tileMap[m][n] = grassTiles[tileIndex];
+				}
+			}
+
+			// 第二阶段：平滑过渡（模拟红警的智能边匹配）
+			for(int pass = 0; pass < 2; pass++) { // 做2次平滑
+				String[][] newTileMap = new String[50][50];
+				for(int m = 0; m < 50; m++) {
+					for(int n = 0; n < 50; n++) {
+						// 统计周围瓦片
+						java.util.Map<String, Integer> neighborCount = new java.util.HashMap<>();
+
+						// 检查8个邻居
+						for(int dm = -1; dm <= 1; dm++) {
+							for(int dn = -1; dn <= 1; dn++) {
+								if(dm == 0 && dn == 0) continue;
+								int nm = m + dm;
+								int nn = n + dn;
+								if(nm >= 0 && nm < 50 && nn >= 0 && nn < 50) {
+									String tile = tileMap[nm][nn];
+									neighborCount.put(tile, neighborCount.getOrDefault(tile, 0) + 1);
+								}
+							}
+						}
+
+						// 选择最常见的邻居瓦片（平滑过渡）
+						String mostCommon = tileMap[m][n];
+						int maxCount = 0;
+						for(java.util.Map.Entry<String, Integer> entry : neighborCount.entrySet()) {
+							if(entry.getValue() > maxCount) {
+								maxCount = entry.getValue();
+								mostCommon = entry.getKey();
+							}
+						}
+
+						// 70%概率跟随邻居，30%保持原样（保留一些变化）
+						if(random.nextDouble() < 0.7) {
+							newTileMap[m][n] = mostCommon;
+						} else {
+							newTileMap[m][n] = tileMap[m][n];
+						}
+					}
+				}
+				tileMap = newTileMap;
+			}
+
+			// 写入地图文件
+			// 一类中心点
+			for(int m = 0; m < 50; m++) {
+				int y = 15 + 30 * m;
+				for(int n = 0; n < 50; n++) {
+					int x = 30 + 60 * n;
+					writer.write(x + "," + y + "," + tileMap[m][n] + "$\n");
+				}
+			}
+
+			// 二类中心点
+			for(int m = 0; m < 50; m++) {
+				int y = 30 * m;
+				for(int n = 0; n < 50; n++) {
+					int x = 60 * n;
+					writer.write(x + "," + y + "," + tileMap[m][n] + "$\n");
+				}
+			}
+
+			writer.close();
+			System.out.println("✓ 已生成红警风格草地地图: " + mapFile.getAbsolutePath());
+			System.out.println("  - 使用区域化地形 + 平滑过渡算法");
+			System.out.println("  - 模拟红警原版的自然分布效果");
+		} catch (IOException e) {
+			System.err.println("✗ 生成地图失败: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 简单的噪声函数（模拟Perlin噪声的低频部分）
+	 * 用于创建大的连续地形区域
+	 */
+	private static double calculateNoise(int m, int n, double frequency) {
+		// 简化的正弦波叠加（模拟Perlin噪声）
+		double value = 0;
+		value += Math.sin(m * frequency) * Math.cos(n * frequency);
+		value += 0.5 * Math.sin(m * frequency * 2) * Math.cos(n * frequency * 2);
+		// 归一化到0-1
+		return (value + 1.5) / 3.0;
+	}
 	/**
 	 * 是否使用OpenGL来渲染,默认使用
 	 */
@@ -36,7 +171,10 @@ public class MainTest {
 	public static void main(String[] args) throws Exception{
 		//程序窗口
 		JFrame jf = new JFrame("红色警戒");
-		
+
+		// 生成纯平草地地图
+		// generateGrassMap(); // 已禁用，使用完整地形地图代替
+
 		SysConfig.initSysConfig();//初始化系统参数
 		
 		//初始化鼠标指针形状图片
