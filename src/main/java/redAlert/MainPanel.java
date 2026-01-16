@@ -23,6 +23,8 @@ import com.jogamp.opengl.awt.GLJPanel;
 import com.jogamp.opengl.util.FPSAnimator;
 
 import redAlert.enums.MouseStatus;
+import redAlert.enums.OverlayType;
+import redAlert.enums.TerrainType;
 import redAlert.militaryBuildings.AfWeap;
 import redAlert.other.Mouse;
 import redAlert.other.MouseCursorObject;
@@ -249,6 +251,26 @@ public class MainPanel extends GLJPanel{
 						if(index >= 0) { // 检查地形是否存在
 							CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
 							cp.setTileIndex(index);
+
+							// 解析地形类型和覆盖物（新格式支持）
+							if(infos.length >= 5) {
+								try {
+									String terrainTypeName = infos[3].trim();
+									String overlayTypeName = infos[4].trim();
+
+									// 设置地形类型
+									TerrainType terrainType = TerrainType.valueOf(terrainTypeName);
+									cp.terrainType = terrainType;
+
+									// 设置覆盖物类型
+									OverlayType overlayType = OverlayType.valueOf(overlayTypeName);
+									cp.overlayType = overlayType;
+								} catch (IllegalArgumentException e) {
+									// 如果地形类型解析失败，使用默认值
+									System.err.println("解析地形类型失败: " + infos[3] + ", " + infos[4]);
+								}
+							}
+
 							BufferedImage image = terrainImageList.get(index);
 							g2d.drawImage(image, cp.getX()-30, cp.getY()-15, null);
 						}
@@ -267,51 +289,216 @@ public class MainPanel extends GLJPanel{
 	
 	/**
 	 *  绘制地形terrain
-	 *  
+	 *
 	 *  有地形画地形
 	 *  没地形画网格
 	 */
 	public void drawTerrain(GLAutoDrawable drawable,int viewportOffX,int viewportOffY) {
-		
-		
-		
+
+
+
 		if(!terrainImageList.isEmpty()) {
 			Graphics2D g2d = canvas.createGraphics();
-			//一类中心点
+
+			// 绘制所有中心点（包括一类和二类）
+			java.util.List<CenterPoint> allCenterPoints = new java.util.ArrayList<>();
+
+			// 收集一类中心点
 			for(int m=0;m<50;m++) {
 				int y = 15+30*m;
 				for(int n=0;n<50;n++) {
 					int x = 30+60*n;
 					CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
-					int cpx = cp.getX();
-					int cpy = cp.getY();
-					if(  cpx>= viewportOffX-100 && cpx<=viewportOffX+SysConfig.viewportWidth+100 && cpy>=viewportOffY-100 && cpy< viewportOffY+SysConfig.viewportHeight+100) {
-						g2d.drawImage( terrainImageList.get(cp.getTileIndex()), cp.getX()-30-viewportOffX, cp.getY()-15-viewportOffY, null);
+					if(cp != null) {
+						allCenterPoints.add(cp);
 					}
 				}
 			}
-			
-			//二类中心点
+
+			// 收集二类中心点
 			for(int m=0;m<50;m++) {
 				int y = 30*m;
 				for(int n=0;n<50;n++) {
 					int x = 60*n;
 					CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
-					int cpx = cp.getX();
-					int cpy = cp.getY();
-					if(  cpx>= viewportOffX-100 && cpx<=viewportOffX+SysConfig.viewportWidth+100 && cpy>=viewportOffY-100 && cpy< viewportOffY+SysConfig.viewportHeight+100) {
-						g2d.drawImage( terrainImageList.get(cp.getTileIndex()), cp.getX()-30-viewportOffX, cp.getY()-15-viewportOffY, null);
+					if(cp != null) {
+						allCenterPoints.add(cp);
 					}
 				}
 			}
+
+			// 绘制地形
+			for(CenterPoint cp : allCenterPoints) {
+				int cpx = cp.getX();
+				int cpy = cp.getY();
+
+				// 视口剔除优化
+				if(cpx >= viewportOffX-100 && cpx <= viewportOffX+SysConfig.viewportWidth+100 &&
+				   cpy >= viewportOffY-100 && cpy < viewportOffY+SysConfig.viewportHeight+100) {
+
+					int drawX = cp.getX()-30-viewportOffX;
+					int drawY = cp.getY()-15-viewportOffY;
+
+					// 绘制基础瓦片
+					g2d.drawImage(terrainImageList.get(cp.getTileIndex()), drawX, drawY, null);
+
+					// 根据地形类型添加视觉效果
+					drawTerrainEffect(g2d, cp, drawX, drawY);
+				}
+			}
+
 			g2d.dispose();
-			
+
 			DrawableUtil.drawOneImgAtPosition(drawable, canvas, 0, 0, 0, 0);
-			
+
 		}else {
 			CanvasPainter.drawGuidelines(canvas, viewportOffX, viewportOffY);//辅助线网格
-			
+
 			DrawableUtil.drawOneImgAtPosition(drawable, canvas, 0, 0, 0, 0);
+		}
+	}
+
+	/**
+	 * 绘制地形类型的视觉效果
+	 */
+	private void drawTerrainEffect(Graphics2D g2d, CenterPoint cp, int x, int y) {
+		// 保存原始合成模式
+		java.awt.Composite originalComposite = g2d.getComposite();
+
+		try {
+			// 处理覆盖物（先绘制覆盖物，因为它们在地形之上）
+			if(cp.overlayType != OverlayType.None) {
+				drawOverlay(g2d, cp, x, y);
+			}
+
+			// 处理地形类型的视觉效果（半透明覆盖层）
+			drawTerrainTypeEffect(g2d, cp, x, y);
+
+		} finally {
+			// 恢复原始合成模式
+			g2d.setComposite(originalComposite);
+		}
+	}
+
+	/**
+	 * 绘制地形类型的颜色效果
+	 */
+	private void drawTerrainTypeEffect(Graphics2D g2d, CenterPoint cp, int x, int y) {
+		if(cp.terrainType == null) {
+			return;
+		}
+
+		switch(cp.terrainType) {
+			case Water:
+				// 水面 - 蓝色半透明层
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f));
+				g2d.setColor(new java.awt.Color(0, 100, 255));
+				g2d.fillRect(x, y, 60, 30);
+				break;
+
+			case Road:
+				// 道路 - 灰色半透明层
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.3f));
+				g2d.setColor(new java.awt.Color(128, 128, 128));
+				g2d.fillRect(x, y, 60, 30);
+				break;
+
+			case Rock:
+				// 岩石 - 深灰色半透明层
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.5f));
+				g2d.setColor(new java.awt.Color(80, 80, 80));
+				g2d.fillRect(x, y, 60, 30);
+				break;
+
+			case Beach:
+				// 沙滩 - 黄色半透明层
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f));
+				g2d.setColor(new java.awt.Color(240, 220, 140));
+				g2d.fillRect(x, y, 60, 30);
+				break;
+
+			case Clear:
+				// 干净地面 - 略微亮一点的绿色调
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.2f));
+				g2d.setColor(new java.awt.Color(144, 238, 144));
+				g2d.fillRect(x, y, 60, 30);
+				break;
+
+			case Rough:
+			default:
+				// 野地 - 不添加额外效果，使用原始瓦片
+				break;
+		}
+	}
+
+	/**
+	 * 绘制覆盖物
+	 */
+	private void drawOverlay(Graphics2D g2d, CenterPoint cp, int x, int y) {
+		if(cp.overlayType == null) {
+			return;
+		}
+
+		switch(cp.overlayType) {
+			case Tree:
+				// 树木 - 绘制绿色三角形
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.8f));
+				g2d.setColor(new java.awt.Color(34, 139, 34));
+
+				// 绘制简单的树形（三角形）
+				int[] xPoints = {x + 30, x + 15, x + 45};
+				int[] yPoints = {y + 5, y + 28, y + 28};
+				g2d.fillPolygon(xPoints, yPoints, 3);
+
+				// 树干
+				g2d.setColor(new java.awt.Color(101, 67, 33));
+				g2d.fillRect(x + 28, y + 25, 4, 5);
+				break;
+
+			case Tiberium:
+				// 矿石 - 绘制绿色菱形
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.9f));
+				g2d.setColor(new java.awt.Color(0, 255, 127));
+
+				// 绘制菱形矿石
+				int[] txPoints = {x + 30, x + 20, x + 30, x + 40};
+				int[] tyPoints = {y + 8, y + 15, y + 22, y + 15};
+				g2d.fillPolygon(txPoints, tyPoints, 4);
+
+				// 闪烁效果
+				g2d.setColor(new java.awt.Color(200, 255, 200));
+				g2d.fillRect(x + 28, y + 13, 4, 4);
+				break;
+
+			case Rock:
+				// 岩石障碍 - 绘制灰色圆形
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.85f));
+				g2d.setColor(new java.awt.Color(105, 105, 105));
+				g2d.fillOval(x + 15, y + 8, 30, 18);
+
+				// 岩石纹理
+				g2d.setColor(new java.awt.Color(80, 80, 80));
+				g2d.fillOval(x + 20, y + 10, 8, 6);
+				g2d.fillOval(x + 32, y + 14, 6, 5);
+				break;
+
+			case Crate:
+				// 箱子 - 绘制棕色矩形
+				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.9f));
+				g2d.setColor(new java.awt.Color(205, 133, 63));
+				g2d.fillRect(x + 22, y + 10, 16, 12);
+
+				// 箱子边框
+				g2d.setColor(new java.awt.Color(139, 90, 43));
+				g2d.drawRect(x + 22, y + 10, 16, 12);
+				g2d.drawLine(x + 22, y + 10, x + 38, y + 22);
+				g2d.drawLine(x + 38, y + 10, x + 22, y + 22);
+				break;
+
+			case None:
+			default:
+				// 无覆盖物
+				break;
 		}
 	}
 	
