@@ -52,10 +52,15 @@ public class SysConfig {
 	public static int frameHeight;
 	/**
 	 * 战场地图的宽高
-	 * 
-	 * 以后可能会增加可视区域的宽高,所以这个值是地图的最大值,所以认为不可变
+	 *
+	 * 实际有效区域由中心点网格决定:
+	 * - 一类中心点: x从30开始,间隔60,共50个,最大2970
+	 * - 二类中心点: x从0开始,间隔60,共50个,最大2940
+	 * - Y轴最大值: 1485 (一类中心点)
+	 *
+	 * 配置值略大于实际最大中心点坐标,留出边缘余量
 	 */
-	public static final int gameMapWidth = 6000;
-	public static final int gameMapHeight = 4000;
+	public static final int gameMapWidth = 3000;
+	public static final int gameMapHeight = 1500;
 	
 }
