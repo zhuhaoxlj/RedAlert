@@ -122,11 +122,11 @@ public class MainTest {
 //		Constructor.putOneBuilding(new AfOrep(SceneType.TEM,UnitColor.Green,515,800),scenePanel);//矿石精炼厂
 //		Thread.sleep(time);
 		CenterPoint cp = PointUtil.getCenterPoint(800, 550);
-		AfPill targetPill = new AfPill(cp,SceneType.TEM,UnitColor.Green);
+		AfPill targetPill = new AfPill(cp,SceneType.TEM,UnitColor.Pink);
 		Constructor.putOneBuilding(targetPill);//机枪碉堡
 		
 		CenterPoint cp2222 = PointUtil.getCenterPoint(200, 550);
-		AfPill targetPill2 = new AfPill(cp2222,SceneType.TEM,UnitColor.Red);
+		AfPill targetPill2 = new AfPill(cp2222,SceneType.TEM,UnitColor.Pink);
 		Constructor.putOneBuilding(targetPill2);//机枪碉堡
 //		Thread.sleep(time);
 //		Constructor.putOneBuilding(new AfSam(SceneType.TEM,UnitColor.LightBlue,550,550),scenePanel);//爱国者飞弹
@@ -199,11 +199,11 @@ public class MainTest {
 //		CanvasPainter.drawGuidelines(GameContext.getMainPanel().getGuidelinesCanvas());
 		
 		Thread.sleep(500);
-		GrizTank gtank = new GrizTank(64*2-64,32*3-64,UnitColor.Orange);
+		GrizTank gtank = new GrizTank(64*2-64,32*3-64,UnitColor.Pink);
 		Constructor.putOneShapeUnit(gtank);//灰熊坦克
 //		
 		CenterPoint cc1 = PointUtil.getCenterPoint(450, 100);
-		XiniuTank2 xnTank = new XiniuTank2(cc1.getX()-64,cc1.getY()-64,UnitColor.Orange);
+		XiniuTank2 xnTank = new XiniuTank2(cc1.getX()-64,cc1.getY()-64,UnitColor.Pink);
 		Constructor.putOneShapeUnit(xnTank);//犀牛坦克
 		
 //		CenterPoint cc = PointUtil.getCenterPoint(300, 100);
@@ -217,7 +217,7 @@ public class MainTest {
 		Thread.sleep(1000);
 		
 		CenterPoint dd = PointUtil.getCenterPoint(600, 450);
-		Mcv mcv = new Mcv(dd.getX()-64,dd.getY()-64,UnitColor.Orange);//基地车
+		Mcv mcv = new Mcv(dd.getX()-64,dd.getY()-64,UnitColor.Pink);//基地车
 		Constructor.putOneShapeUnit(mcv);
 		
 //		Thread.sleep(3000);

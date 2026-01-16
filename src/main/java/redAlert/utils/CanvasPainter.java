@@ -284,6 +284,9 @@ public class CanvasPainter {
 		if(targetColor==UnitColor.Gray) {
 			mc = turnGray(da);
 		}
+		if(targetColor==UnitColor.Pink) {
+			mc = turnPink(da);
+		}
 		return addAlpha(mc);//之所以颜色要加alpha,是因为ARBG图片,如果alpha位为0,则颜色完全透明,表现为黑色
 	}
 	
@@ -301,8 +304,14 @@ public class CanvasPainter {
 		int d = c<<8;
 		int result = oriColor | d;
 		return result;
-	}									
-	
+	}
+	private static int turnPink(int oriColor) {//粉色 红色分量保持，蓝色分量按比例混合
+		int red = oriColor >> 16;  // 提取红色分量
+		int blue = (int)(red * 0.7);  // 蓝色强度为红色的70%，产生粉色效果
+		int result = (red << 16) | blue;  // 组合红色和蓝色，绿色为0（蓝色在低8位，不需要移位）
+		return result;
+	}
+
 	private static int delAlpha(int oriColor) {return oriColor & 0x00FFFFFF;}
 	private static int addAlpha(int oriColor) {return oriColor | 0xFF000000;}
 	
