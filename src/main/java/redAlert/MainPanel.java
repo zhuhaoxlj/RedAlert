@@ -468,33 +468,60 @@ public class MainPanel extends GLJPanel{
 			int endTileX = Math.min(50, (viewportOffX + viewportWidth + 200) / 60 + 1);
 			int endTileY = Math.min(50, (viewportOffY + viewportHeight + 200) / 30 + 1);
 
-			// 绘制一类中心点（偏移坐标：x=30+60*n, y=15+30*m）
+			// ========== 性能优化 Phase 2：批量渲染地形效果 ==========
+			// 优化策略：先收集所有瓦片，按地形类型分组，然后批量绘制
+			// 这样可以减少 setColor 调用次数，从每瓦片 1-2 次减少到每种地形 1 次
+
+			// 创建临时列表存储不同类型的瓦片（按地形类型分组）
+			java.util.List<int[]> waterTiles = new java.util.ArrayList<>();
+			java.util.List<int[]> roadTiles = new java.util.ArrayList<>();
+			java.util.List<int[]> rockGroundTiles = new java.util.ArrayList<>();
+			java.util.List<int[]> beachTiles = new java.util.ArrayList<>();
+			java.util.List<int[]> clearTiles = new java.util.ArrayList<>();
+
+			// 第一遍循环：绘制基础瓦片并收集需要绘制效果的地形
 			for(int m = startTileY; m < endTileY; m++) {
-				// 性能优化：使用预计算的 Y 坐标
 				int y = TILE_COORDS[m][0][1];
-				// 检查这个 Y 是否在视口内
 				if (y < viewportOffY - 100 || y > viewportOffY + viewportHeight + 100) {
 					continue;
 				}
 
 				for(int n = startTileX; n < endTileX; n++) {
-					// 性能优化：使用预计算的 X 坐标
 					int x = TILE_COORDS[m][n][0];
 					CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
 					if(cp != null) {
 						int drawX = x - 30 - viewportOffX;
 						int drawY = y - 15 - viewportOffY;
 						g2d.drawImage(terrainImageList.get(cp.getTileIndex()), drawX, drawY, null);
-						// 恢复地形效果,但已注释掉覆盖物
-						drawTerrainEffect(g2d, cp, drawX, drawY);
+
+						// 收集需要绘制地形效果的瓦片（按类型分组）
+						if(cp.terrainType != null && cp.terrainType != redAlert.enums.TerrainType.Rough) {
+							int[] tileData = {drawX, drawY};
+							switch(cp.terrainType) {
+								case Water:
+									waterTiles.add(tileData);
+									break;
+								case Road:
+									roadTiles.add(tileData);
+									break;
+								case Rock:
+									rockGroundTiles.add(tileData);
+									break;
+								case Beach:
+									beachTiles.add(tileData);
+									break;
+								case Clear:
+									clearTiles.add(tileData);
+									break;
+							}
+						}
 					}
 				}
 			}
 
-			// 绘制二类中心点（对齐坐标：x=60*n, y=30*m）
+			// 第二遍循环：绘制二类中心点
 			for(int m = startTileY; m < endTileY; m++) {
 				int y = 30 * m;
-				// 检查这个 Y 是否在视口内
 				if (y < viewportOffY - 100 || y > viewportOffY + viewportHeight + 100) {
 					continue;
 				}
@@ -506,11 +533,75 @@ public class MainPanel extends GLJPanel{
 						int drawX = x - 30 - viewportOffX;
 						int drawY = y - 15 - viewportOffY;
 						g2d.drawImage(terrainImageList.get(cp.getTileIndex()), drawX, drawY, null);
-						// 恢复地形效果,但已注释掉覆盖物
-						drawTerrainEffect(g2d, cp, drawX, drawY);
+
+						// 同样收集需要绘制地形效果的瓦片
+						if(cp.terrainType != null && cp.terrainType != redAlert.enums.TerrainType.Rough) {
+							int[] tileData = {drawX, drawY};
+							switch(cp.terrainType) {
+								case Water:
+									waterTiles.add(tileData);
+									break;
+								case Road:
+									roadTiles.add(tileData);
+									break;
+								case Rock:
+									rockGroundTiles.add(tileData);
+									break;
+								case Beach:
+									beachTiles.add(tileData);
+									break;
+								case Clear:
+									clearTiles.add(tileData);
+									break;
+							}
+						}
 					}
 				}
 			}
+
+			// 第三遍循环：批量绘制地形效果（每种颜色只设置一次）
+			g2d.setComposite(java.awt.AlphaComposite.SrcOver);
+
+			// 批量绘制水面
+			if(!waterTiles.isEmpty()) {
+				g2d.setColor(TerrainColors.WATER);
+				for(int[] tile : waterTiles) {
+					g2d.fillRect(tile[0], tile[1], 60, 30);
+				}
+			}
+
+			// 批量绘制道路
+			if(!roadTiles.isEmpty()) {
+				g2d.setColor(TerrainColors.ROAD);
+				for(int[] tile : roadTiles) {
+					g2d.fillRect(tile[0], tile[1], 60, 30);
+				}
+			}
+
+			// 批量绘制岩石地面
+			if(!rockGroundTiles.isEmpty()) {
+				g2d.setColor(TerrainColors.ROCK_GROUND);
+				for(int[] tile : rockGroundTiles) {
+					g2d.fillRect(tile[0], tile[1], 60, 30);
+				}
+			}
+
+			// 批量绘制沙滩
+			if(!beachTiles.isEmpty()) {
+				g2d.setColor(TerrainColors.BEACH);
+				for(int[] tile : beachTiles) {
+					g2d.fillRect(tile[0], tile[1], 60, 30);
+				}
+			}
+
+			// 批量绘制干净地面
+			if(!clearTiles.isEmpty()) {
+				g2d.setColor(TerrainColors.CLEAR);
+				for(int[] tile : clearTiles) {
+					g2d.fillRect(tile[0], tile[1], 60, 30);
+				}
+			}
+			// ========== Phase 2 批量渲染优化结束 ==========
 
 			// 优化：不再 dispose Graphics2D,而是复用
 			// g2d.dispose();  // 移除 dispose 调用
@@ -724,18 +815,20 @@ public class MainPanel extends GLJPanel{
 			// 优化：使用缓存的 Graphics2D 对象,避免每帧重复创建
 			Graphics2D g2d = getCachedGraphics2D();
 
+			// ========== 性能优化 Phase 2：缓存单位位置，减少方法调用 ==========
 			while(!drawShapeUnitList.isEmpty()) {
 				ShapeUnit shp = drawShapeUnitList.poll();
 
-				// 性能优化：添加视口剔除，避免渲染屏幕外的单位
-				int unitX = shp.getPositionX();
-				int unitY = shp.getPositionY();
+				// 性能优化：一次性获取单位位置，避免重复调用 getPositionX/Y
+				int unitX = shp.positionX; // 直接访问字段而非方法
+				int unitY = shp.positionY;
 
 				// 粗略剔除（基于单位位置）
 				if (unitX < viewMinX || unitX > viewMaxX || unitY < viewMinY || unitY > viewMaxY) {
 					RuntimeParameter.addUnitToQueue(shp);
 					continue;
 				}
+				// ========== Phase 2 优化结束 ==========
 
 				if(shp instanceof AfWeap) {
 					AfWeap afweap = (AfWeap)shp;
