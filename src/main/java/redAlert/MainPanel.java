@@ -59,6 +59,47 @@ public class MainPanel extends GLJPanel{
 	 */
 	public BufferedImage canvas = new BufferedImage(SysConfig.viewportWidth,SysConfig.viewportHeight,BufferedImage.TYPE_INT_ARGB);
 
+	// ========== 性能优化：静态颜色常量，避免每帧创建大量 Color 对象 ==========
+	/**
+	 * 地形颜色常量
+	 * 使用静态 final 避免每帧重复创建，减少 GC 压力和内存分配
+	 */
+	private static final class TerrainColors {
+		// 地形类型颜色
+		static final java.awt.Color WATER = new java.awt.Color(0, 100, 255, 102);
+		static final java.awt.Color ROAD = new java.awt.Color(128, 128, 128, 76);
+		static final java.awt.Color ROCK_GROUND = new java.awt.Color(80, 80, 80, 127);
+		static final java.awt.Color BEACH = new java.awt.Color(240, 220, 140, 102);
+		static final java.awt.Color CLEAR = new java.awt.Color(144, 238, 144, 51);
+
+		// 覆盖物颜色
+		static final java.awt.Color TREE = new java.awt.Color(34, 139, 34, 204);
+		static final java.awt.Color TREE_TRUNK = new java.awt.Color(101, 67, 33, 255);
+		static final java.awt.Color TIBERIUM = new java.awt.Color(0, 255, 127, 229);
+		static final java.awt.Color TIBERIUM_HIGHLIGHT = new java.awt.Color(200, 255, 200, 255);
+		static final java.awt.Color ROCK = new java.awt.Color(105, 105, 105, 216);
+		static final java.awt.Color ROCK_DARK = new java.awt.Color(80, 80, 80, 255);
+		static final java.awt.Color CRATE = new java.awt.Color(205, 133, 63, 229);
+		static final java.awt.Color CRATE_BORDER = new java.awt.Color(139, 90, 43, 255);
+	}
+
+	// ========== 性能优化：预计算瓦片坐标 ==========
+	/**
+	 * 预计算的瓦片坐标表
+	 * 避免每帧重复计算 x = 30 + 60*n 和 y = 15 + 30*m
+	 */
+	private static final int[][][] TILE_COORDS = new int[50][50][2]; // [m][n][0=x,1=y]
+
+	static {
+		for(int m = 0; m < 50; m++) {
+			for(int n = 0; n < 50; n++) {
+				TILE_COORDS[m][n][0] = 30 + 60 * n; // 一类中心点 X 坐标
+				TILE_COORDS[m][n][1] = 15 + 30 * m; // 一类中心点 Y 坐标
+			}
+		}
+	}
+	// ========== 性能优化结束 ==========
+
 	// ========== 渲染优化：Graphics2D 复用与双缓冲 ==========
 	/** 缓存的 Graphics2D 对象（避免每帧重复创建） */
 	private Graphics2D cachedGraphics2D = null;
@@ -429,14 +470,16 @@ public class MainPanel extends GLJPanel{
 
 			// 绘制一类中心点（偏移坐标：x=30+60*n, y=15+30*m）
 			for(int m = startTileY; m < endTileY; m++) {
-				int y = 15 + 30 * m;
+				// 性能优化：使用预计算的 Y 坐标
+				int y = TILE_COORDS[m][0][1];
 				// 检查这个 Y 是否在视口内
 				if (y < viewportOffY - 100 || y > viewportOffY + viewportHeight + 100) {
 					continue;
 				}
 
 				for(int n = startTileX; n < endTileX; n++) {
-					int x = 30 + 60 * n;
+					// 性能优化：使用预计算的 X 坐标
+					int x = TILE_COORDS[m][n][0];
 					CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
 					if(cp != null) {
 						int drawX = x - 30 - viewportOffX;
@@ -531,31 +574,31 @@ public class MainPanel extends GLJPanel{
 		switch(cp.terrainType) {
 			case Water:
 				// 水面 - 蓝色半透明层 (40% 透明度)
-				g2d.setColor(new java.awt.Color(0, 100, 255, 102)); // Alpha = 40% of 255
+				g2d.setColor(TerrainColors.WATER);
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Road:
 				// 道路 - 灰色半透明层 (30% 透明度)
-				g2d.setColor(new java.awt.Color(128, 128, 128, 76)); // Alpha = 30% of 255
+				g2d.setColor(TerrainColors.ROAD);
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Rock:
 				// 岩石 - 深灰色半透明层 (50% 透明度)
-				g2d.setColor(new java.awt.Color(80, 80, 80, 127)); // Alpha = 50% of 255
+				g2d.setColor(TerrainColors.ROCK_GROUND);
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Beach:
 				// 沙滩 - 黄色半透明层 (40% 透明度)
-				g2d.setColor(new java.awt.Color(240, 220, 140, 102)); // Alpha = 40% of 255
+				g2d.setColor(TerrainColors.BEACH);
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Clear:
 				// 干净地面 - 略微亮一点的绿色调 (20% 透明度)
-				g2d.setColor(new java.awt.Color(144, 238, 144, 51)); // Alpha = 20% of 255
+				g2d.setColor(TerrainColors.CLEAR);
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
@@ -585,7 +628,7 @@ public class MainPanel extends GLJPanel{
 		switch(cp.overlayType) {
 			case Tree:
 				// 树木 - 绘制绿色三角形 (80% 不透明度)
-				g2d.setColor(new java.awt.Color(34, 139, 34, 204)); // Alpha = 80% of 255
+				g2d.setColor(TerrainColors.TREE);
 
 				// 绘制简单的树形（三角形）
 				int[] xPoints = {x + 30, x + 15, x + 45};
@@ -593,13 +636,13 @@ public class MainPanel extends GLJPanel{
 				g2d.fillPolygon(xPoints, yPoints, 3);
 
 				// 树干 (完全不透明)
-				g2d.setColor(new java.awt.Color(101, 67, 33, 255)); // Alpha = 100%
+				g2d.setColor(TerrainColors.TREE_TRUNK);
 				g2d.fillRect(x + 28, y + 25, 4, 5);
 				break;
 
 			case Tiberium:
 				// 矿石 - 绘制绿色菱形 (90% 不透明度)
-				g2d.setColor(new java.awt.Color(0, 255, 127, 229)); // Alpha = 90% of 255
+				g2d.setColor(TerrainColors.TIBERIUM);
 
 				// 绘制菱形矿石
 				int[] txPoints = {x + 30, x + 20, x + 30, x + 40};
@@ -607,28 +650,28 @@ public class MainPanel extends GLJPanel{
 				g2d.fillPolygon(txPoints, tyPoints, 4);
 
 				// 闪烁效果 (完全亮色,不透明)
-				g2d.setColor(new java.awt.Color(200, 255, 200, 255)); // Alpha = 100%
+				g2d.setColor(TerrainColors.TIBERIUM_HIGHLIGHT);
 				g2d.fillRect(x + 28, y + 13, 4, 4);
 				break;
 
 			case Rock:
 				// 岩石障碍 - 绘制灰色圆形 (85% 不透明度)
-				g2d.setColor(new java.awt.Color(105, 105, 105, 216)); // Alpha = 85% of 255
+				g2d.setColor(TerrainColors.ROCK);
 				g2d.fillOval(x + 15, y + 8, 30, 18);
 
 				// 岩石纹理 (完全不透明)
-				g2d.setColor(new java.awt.Color(80, 80, 80, 255)); // Alpha = 100%
+				g2d.setColor(TerrainColors.ROCK_DARK);
 				g2d.fillOval(x + 20, y + 10, 8, 6);
 				g2d.fillOval(x + 32, y + 14, 6, 5);
 				break;
 
 			case Crate:
 				// 箱子 - 绘制棕色矩形 (90% 不透明度)
-				g2d.setColor(new java.awt.Color(205, 133, 63, 229)); // Alpha = 90% of 255
+				g2d.setColor(TerrainColors.CRATE);
 				g2d.fillRect(x + 22, y + 10, 16, 12);
 
 				// 箱子边框 (完全不透明)
-				g2d.setColor(new java.awt.Color(139, 90, 43, 255)); // Alpha = 100%
+				g2d.setColor(TerrainColors.CRATE_BORDER);
 				g2d.drawRect(x + 22, y + 10, 16, 12);
 				g2d.drawLine(x + 22, y + 10, x + 38, y + 22);
 				g2d.drawLine(x + 38, y + 10, x + 22, y + 22);
