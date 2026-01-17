@@ -477,9 +477,10 @@ public abstract class Vehicle extends MovableUnit implements Turnable,Attackable
 							}
 							
 						}else {
-							//等待
+							//等待：目标位置暂时不可用（可能是转向中或其他单位占用）
 							nextTarget = curCenterPoint;
-							System.out.println("??1");
+							// 不再打印调试日志，减少控制台噪音
+							// System.out.println("??1");
 						}
 					}else {
 						if(isExistBuilding || isExistSolider) {
@@ -519,9 +520,10 @@ public abstract class Vehicle extends MovableUnit implements Turnable,Attackable
 							
 						}else {
 							if(isBookedByOther) {
-								//等待
+								//等待：目标位置已被其他单位预订
 								nextTarget = curCenterPoint;
-								System.out.println("??2");
+								// 不再打印调试日志，减少控制台噪音
+								// System.out.println("??2");
 							}else {
 								boolean bookedFlag = nextTarget.addBook(this);
 								if(bookedFlag) {
@@ -529,9 +531,10 @@ public abstract class Vehicle extends MovableUnit implements Turnable,Attackable
 									speed = 1;
 									moveOneTime();//是否应该移动   代码不一定会走到这里
 								}else {
-									//等待
+									//等待：无法预订目标位置
 									nextTarget = curCenterPoint;
-									System.out.println("??3");
+									// 不再打印调试日志，减少控制台噪音
+									// System.out.println("??3");
 								}
 							}
 						}
