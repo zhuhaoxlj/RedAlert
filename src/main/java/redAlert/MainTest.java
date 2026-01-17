@@ -24,6 +24,7 @@ import redAlert.shapeObjects.vehicle.XiniuTank2;
 import redAlert.utilBean.CenterPoint;
 import redAlert.utilBean.LittleCenterPoint;
 import redAlert.utils.LittleCenterPointUtil;
+import redAlert.utils.PerformanceMonitor;
 import redAlert.utils.PointUtil;
 
 /**
@@ -169,14 +170,20 @@ public class MainTest {
 	public static boolean isUseOpenGL = true;
 	
 	public static void main(String[] args) throws Exception{
-		//程序窗口
+		// 程序窗口
 		JFrame jf = new JFrame("红色警戒");
+
+		// 初始化性能监控系统
+		PerformanceMonitor.init();
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			PerformanceMonitor.shutdown();
+		}));
 
 		// 生成纯平草地地图
 		// generateGrassMap(); // 已禁用，使用完整地形地图代替
 
 		SysConfig.initSysConfig();//初始化系统参数
-		
+
 		//初始化鼠标指针形状图片
 		Mouse.initMouseCursor();
 		//初始化建造预选块
