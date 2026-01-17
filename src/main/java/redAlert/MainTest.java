@@ -23,6 +23,7 @@ import redAlert.shapeObjects.vehicle.Sref;
 import redAlert.shapeObjects.vehicle.XiniuTank2;
 import redAlert.utilBean.CenterPoint;
 import redAlert.utilBean.LittleCenterPoint;
+import redAlert.utils.GameLogger;
 import redAlert.utils.LittleCenterPointUtil;
 import redAlert.utils.PerformanceMonitor;
 import redAlert.utils.PointUtil;
@@ -170,6 +171,12 @@ public class MainTest {
 	public static boolean isUseOpenGL = true;
 	
 	public static void main(String[] args) throws Exception{
+		// 初始化游戏日志系统（必须在最开始）
+		GameLogger.init();
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			GameLogger.shutdown();
+		}));
+
 		// 程序窗口
 		JFrame jf = new JFrame("红色警戒");
 
