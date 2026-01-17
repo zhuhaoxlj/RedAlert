@@ -210,7 +210,7 @@ public class MainTest {
 		jf.add(BorderLayout.EAST,optionsPanel);//格式布局放右边
 		
 		jf.setSize(SysConfig.frameWidth,SysConfig.frameHeight);
-		jf.setResizable(false);//不可调整大小
+		jf.setResizable(SysConfig.resizable);//根据配置决定是否可调整大小
 		jf.setAlwaysOnTop(false);//不置顶
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 //		jf.setLocationRelativeTo(null);//屏幕居中
