@@ -19,9 +19,17 @@ import redAlert.utils.PointUtil;
  * 谭雅
  */
 public class Tany extends Soldier{
-	
+
+	// ========== 死锁保护：防止无限等待占用 ==========
+	/** 连续等待计数器（防止preBooked竞争死锁） */
+	private int consecutiveOccWait = 0;
+
+	/** 最大连续等待次数（超过后放弃移动） */
+	private static final int MAX_OCC_WAIT = 100; // 约1.6秒@60FPS
+	// ========== 死锁保护结束 ==========
+
 	public Tany(LittleCenterPoint lcp,UnitColor color) {
-		
+
 		super(lcp,"tany",color);
 		super.centerOffX = 62;
 		super.centerOffY = 57;
@@ -114,16 +122,30 @@ public class Tany extends Soldier{
 							if("ok".equals(desc)) {
 								nextTarget= (LittleCenterPoint)result.get("cp");
 								haveGetPoint.add(nextTarget);
+								consecutiveOccWait = 0; // 重置等待计数
 								moveOneStep();
 							}else if("occ".equals(desc)) {
-								//其他兵临时占用 需要等待  什么也不做
+								//其他兵临时占用 需要等待
+								consecutiveOccWait++;
+
+								// 死锁保护：超过最大等待次数后放弃
+								if(consecutiveOccWait > MAX_OCC_WAIT) {
+									System.err.println("警告: 单位 " + this.unitNo + " 等待超时(" + consecutiveOccWait + "次),放弃移动");
+									movePath.clear(); // 清空移动路径
+									consecutiveOccWait = 0; // 重置计数
+									return;
+								}
+								// 什么也不做,等待下一帧重试
 							}else if("unacc".equals(desc)) {
 								//其他兵把这个点当作终点使用了
 								haveGetPoint.add((LittleCenterPoint)result.get("cp"));
+								consecutiveOccWait = 0; // 重置等待计数
 								//下次继续找
 							}else if("noway".equals(desc)) {
 								//兵走进死胡同了
 								System.out.println("走死胡同了");
+								movePath.clear();
+								return;
 							}
 						}
 						

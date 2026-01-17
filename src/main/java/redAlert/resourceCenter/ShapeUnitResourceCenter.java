@@ -414,25 +414,44 @@ public class ShapeUnitResourceCenter {
 					CenterPoint targetMoveLcp = bornCp.getRightDn().getRightDn().getRightDn().getRightDn();
 					CenterPoint target = PointUtil.findVehicleCanOnCpNearBy(targetMoveLcp);
 					System.out.println("初次坐标"+target);
-					
-					
+
+
 					if(vehicle==VehicleEnum.AfGtnk) {
 						AfWeap weap = (AfWeap)building;
 						weap.setMakingVehicle(true);//正在生产坦克
-						
+
 						GrizTank gtank = new GrizTank(bornCp.getX()-64,bornCp.getY()-64,GlobalConfig.unitColor);
 						Constructor.putOneShapeUnit(gtank);
 //						addMovableUnit(gtank);
 						gtank.moveToTarget(target);
-						
+
+						// 添加超时保护,防止工厂出口被堵死导致无限循环
+						long waitStartTime = System.currentTimeMillis();
+						final long MAX_WAIT_TIME = 10000; // 最大等待10秒
+						int retryCount = 0;
+						int maxRetries = 100; // 最大重试100次
+
 						while(true) {
+							// 检查超时
+							if(System.currentTimeMillis() - waitStartTime > MAX_WAIT_TIME) {
+								System.err.println("警告: 坦克 " + gtank.unitNo + " 移出工厂超时(" + MAX_WAIT_TIME + "ms),强制停止");
+								break;
+							}
+
+							// 检查重试次数
+							if(retryCount > maxRetries) {
+								System.err.println("警告: 坦克 " + gtank.unitNo + " 重试次数超限(" + retryCount + "),强制停止");
+								break;
+							}
+
 							CenterPoint tankCp = gtank.getCurCenterPoint();
 							Thread.sleep(5);
 							if(!target.isVehicleCanOn() || gtank.engineStatus==EngineStatus.Stopped) {
+								retryCount++;
 								System.out.println("二次坐标"+target);
 								target = PointUtil.findVehicleCanOnCpNearBy(targetMoveLcp);
 								gtank.moveToTarget(target);
-								
+
 							}
 							if(!tankCp.equals(bornCp) && !tankCp.equals(bornCp.getRightDn()) && !tankCp.equals(bornCp.getRightDn().getRightDn())) {
 								break;

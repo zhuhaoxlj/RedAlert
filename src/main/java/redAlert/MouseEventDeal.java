@@ -542,11 +542,12 @@ public class MouseEventDeal {
 					int mapX = coord.getMapX();
 					int mapY = coord.getMapY();
 
-					// 添加日志: 鼠标移动时打印视口和地图坐标
-					System.out.println("[mouseMoved] 屏幕坐标: (" + mouseEvent.getX() + ", " + mouseEvent.getY() + ")" +
-							", 地图坐标: (" + mapX + ", " + mapY + ")" +
-							", 视口偏移: (" + RuntimeParameter.viewportOffX + ", " + RuntimeParameter.viewportOffY + ")");
-					
+					// 注释掉频繁的日志输出，严重影响性能
+					// 如需调试，可以每100帧打印一次
+					// System.out.println("[mouseMoved] 屏幕坐标: (" + mouseEvent.getX() + ", " + mouseEvent.getY() + ")" +
+					// 		", 地图坐标: (" + mapX + ", " + mapY + ")" +
+					// 		", 视口偏移: (" + RuntimeParameter.viewportOffX + ", " + RuntimeParameter.viewportOffY + ")");
+
 					/**
 					 * 建造状态的判定优先级最高
 					 */
