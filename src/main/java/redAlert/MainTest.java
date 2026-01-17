@@ -181,11 +181,11 @@ public class MainTest {
 		JFrame jf = new JFrame("红色警戒");
 
 		// 设置窗口大小模式（在 initSysConfig 之前调用）
-		// 选项1：全屏模式（占满整个屏幕）
-		SysConfig.setWindowSizeMode(SysConfig.WindowSizeMode.FULLSCREEN);
+		// 选项1：全屏模式（占满整个屏幕，性能要求最高）
+		// SysConfig.setWindowSizeMode(SysConfig.WindowSizeMode.FULLSCREEN);
 
-		// 选项2：全高清模式（1920x1080固定）
-		// SysConfig.setWindowSizeMode(SysConfig.WindowSizeMode.FULL_HD_1920x1080);
+		// 选项2：全高清模式（1920x1080固定，推荐，性能平衡）
+		SysConfig.setWindowSizeMode(SysConfig.WindowSizeMode.FULL_HD_1920x1080);
 
 		// 选项3：自动推荐最佳模式
 		// SysConfig.setWindowSizeMode(SysConfig.recommendWindowMode());
