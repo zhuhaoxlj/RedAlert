@@ -6,8 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="b72de4ab-c736-43a8-8309-c5916ea2c426" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/redAlert/mapEditor/MapCenterPoint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/redAlert/mapEditor/MapCenterPoint.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_map.text" beforeDir="false" afterPath="$PROJECT_DIR$/test_map.text" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/redAlert/MouseEventDeal.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/redAlert/MouseEventDeal.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/redAlert/utils/LittleCenterPointUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/redAlert/utils/LittleCenterPointUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/redAlert/utils/MoveUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/redAlert/utils/MoveUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/redAlert/utils/PointUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/redAlert/utils/PointUtil.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,23 +28,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Atest.executor": "Run",
-    "Application.EnhancedMapEditor.executor": "Run",
-    "Application.MainTest.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/ts/Downloads/JavaRedAlert2",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Atest.executor&quot;: &quot;Run&quot;,
+    &quot;Application.EnhancedMapEditor.executor&quot;: &quot;Run&quot;,
+    &quot;Application.MainTest.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/ts/Downloads/JavaRedAlert2&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Application.MainTest">
     <configuration name="Atest" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="redAlert.Atest" />

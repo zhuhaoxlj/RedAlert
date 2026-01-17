@@ -479,6 +479,12 @@ public class MainPanel extends GLJPanel{
 			java.util.List<int[]> beachTiles = new java.util.ArrayList<>();
 			java.util.List<int[]> clearTiles = new java.util.ArrayList<>();
 
+			// 创建临时列表存储覆盖物（按类型分组）
+			java.util.List<int[]> treeTiles = new java.util.ArrayList<>();
+			java.util.List<int[]> tiberiumTiles = new java.util.ArrayList<>();
+			java.util.List<int[]> rockTiles = new java.util.ArrayList<>();
+			java.util.List<int[]> crateTiles = new java.util.ArrayList<>();
+
 			// 第一遍循环：绘制基础瓦片并收集需要绘制效果的地形
 			for(int m = startTileY; m < endTileY; m++) {
 				int y = TILE_COORDS[m][0][1];
@@ -512,6 +518,25 @@ public class MainPanel extends GLJPanel{
 									break;
 								case Clear:
 									clearTiles.add(tileData);
+									break;
+							}
+						}
+
+						// 收集需要绘制覆盖物的瓦片（按类型分组）
+						if(cp.overlayType != null && cp.overlayType != redAlert.enums.OverlayType.None) {
+							int[] tileData = {drawX, drawY};
+							switch(cp.overlayType) {
+								case Tree:
+									treeTiles.add(tileData);
+									break;
+								case Tiberium:
+									tiberiumTiles.add(tileData);
+									break;
+								case Rock:
+									rockTiles.add(tileData);
+									break;
+								case Crate:
+									crateTiles.add(tileData);
 									break;
 							}
 						}
@@ -552,6 +577,25 @@ public class MainPanel extends GLJPanel{
 									break;
 								case Clear:
 									clearTiles.add(tileData);
+									break;
+							}
+						}
+
+						// 收集需要绘制覆盖物的瓦片（按类型分组）
+						if(cp.overlayType != null && cp.overlayType != redAlert.enums.OverlayType.None) {
+							int[] tileData = {drawX, drawY};
+							switch(cp.overlayType) {
+								case Tree:
+									treeTiles.add(tileData);
+									break;
+								case Tiberium:
+									tiberiumTiles.add(tileData);
+									break;
+								case Rock:
+									rockTiles.add(tileData);
+									break;
+								case Crate:
+									crateTiles.add(tileData);
 									break;
 							}
 						}
@@ -601,7 +645,81 @@ public class MainPanel extends GLJPanel{
 					g2d.fillRect(tile[0], tile[1], 60, 30);
 				}
 			}
-			// ========== Phase 2 批量渲染优化结束 ==========
+
+			// ========== 批量渲染覆盖物（树木、矿石、岩石、箱子）==========
+			g2d.setComposite(java.awt.AlphaComposite.SrcOver);
+
+			// 批量绘制树木
+			if(!treeTiles.isEmpty()) {
+				for(int[] tile : treeTiles) {
+					int x = tile[0];
+					int y = tile[1];
+
+					// 树冠
+					g2d.setColor(TerrainColors.TREE);
+					int[] xPoints = {x + 30, x + 15, x + 45};
+					int[] yPoints = {y + 5, y + 28, y + 28};
+					g2d.fillPolygon(xPoints, yPoints, 3);
+
+					// 树干
+					g2d.setColor(TerrainColors.TREE_TRUNK);
+					g2d.fillRect(x + 28, y + 25, 4, 5);
+				}
+			}
+
+			// 批量绘制矿石
+			if(!tiberiumTiles.isEmpty()) {
+				for(int[] tile : tiberiumTiles) {
+					int x = tile[0];
+					int y = tile[1];
+
+					// 矿石本体
+					g2d.setColor(TerrainColors.TIBERIUM);
+					int[] txPoints = {x + 30, x + 20, x + 30, x + 40};
+					int[] tyPoints = {y + 8, y + 15, y + 22, y + 15};
+					g2d.fillPolygon(txPoints, tyPoints, 4);
+
+					// 闪烁效果
+					g2d.setColor(TerrainColors.TIBERIUM_HIGHLIGHT);
+					g2d.fillRect(x + 28, y + 13, 4, 4);
+				}
+			}
+
+			// 批量绘制岩石障碍
+			if(!rockTiles.isEmpty()) {
+				for(int[] tile : rockTiles) {
+					int x = tile[0];
+					int y = tile[1];
+
+					// 岩石本体
+					g2d.setColor(TerrainColors.ROCK);
+					g2d.fillOval(x + 15, y + 8, 30, 18);
+
+					// 岩石纹理
+					g2d.setColor(TerrainColors.ROCK_DARK);
+					g2d.fillOval(x + 20, y + 10, 8, 6);
+					g2d.fillOval(x + 32, y + 14, 6, 5);
+				}
+			}
+
+			// 批量绘制箱子
+			if(!crateTiles.isEmpty()) {
+				for(int[] tile : crateTiles) {
+					int x = tile[0];
+					int y = tile[1];
+
+					// 箱子本体
+					g2d.setColor(TerrainColors.CRATE);
+					g2d.fillRect(x + 22, y + 10, 16, 12);
+
+					// 箱子边框
+					g2d.setColor(TerrainColors.CRATE_BORDER);
+					g2d.drawRect(x + 22, y + 10, 16, 12);
+					g2d.drawLine(x + 22, y + 10, x + 38, y + 22);
+					g2d.drawLine(x + 38, y + 10, x + 22, y + 22);
+				}
+			}
+			// ========== Phase 2 批量渲染优化结束（包含覆盖物）==========
 
 			// 优化：不再 dispose Graphics2D,而是复用
 			// g2d.dispose();  // 移除 dispose 调用
