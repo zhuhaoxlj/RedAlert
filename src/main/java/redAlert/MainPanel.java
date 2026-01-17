@@ -58,6 +58,117 @@ public class MainPanel extends GLJPanel{
 	 * 临时画板   最终将移除此画板,但是现在还没改完
 	 */
 	public BufferedImage canvas = new BufferedImage(SysConfig.viewportWidth,SysConfig.viewportHeight,BufferedImage.TYPE_INT_ARGB);
+
+	// ========== 渲染优化：Graphics2D 复用与双缓冲 ==========
+	/** 缓存的 Graphics2D 对象（避免每帧重复创建） */
+	private Graphics2D cachedGraphics2D = null;
+
+	/** 双缓冲：前缓冲（用于显示） */
+	private BufferedImage frontBuffer = null;
+
+	/** 双缓冲：后缓冲（用于绘制） */
+	private BufferedImage backBuffer = null;
+
+	/** 当前绘制的缓冲区 */
+	private BufferedImage currentBuffer = null;
+
+	/**
+	 * 初始化双缓冲系统
+	 */
+	private void initDoubleBuffering() {
+		if(frontBuffer == null) {
+			frontBuffer = new BufferedImage(SysConfig.viewportWidth, SysConfig.viewportHeight, BufferedImage.TYPE_INT_ARGB);
+			backBuffer = new BufferedImage(SysConfig.viewportWidth, SysConfig.viewportHeight, BufferedImage.TYPE_INT_ARGB);
+			currentBuffer = backBuffer;
+		}
+	}
+
+	/**
+	 * 获取或创建缓存的 Graphics2D 对象
+	 */
+	private Graphics2D getCachedGraphics2D() {
+		if(cachedGraphics2D == null) {
+			// 首次创建
+			initDoubleBuffering();
+			cachedGraphics2D = currentBuffer.createGraphics();
+
+			// 设置渲染优化参数
+			cachedGraphics2D.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING,
+				java.awt.RenderingHints.VALUE_RENDER_SPEED);
+			cachedGraphics2D.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+				java.awt.RenderingHints.VALUE_ANTIALIAS_OFF);
+		}
+
+		return cachedGraphics2D;
+	}
+
+	/**
+	 * 交换缓冲区并重置 Graphics2D（双缓冲机制）
+	 */
+	private void swapCanvasBuffers() {
+		// 交换缓冲区引用
+		BufferedImage temp = frontBuffer;
+		frontBuffer = backBuffer;
+		backBuffer = temp;
+
+		// 更新当前绘制缓冲区
+		currentBuffer = backBuffer;
+
+		// 销毁旧的 Graphics2D
+		if(cachedGraphics2D != null) {
+			cachedGraphics2D.dispose();
+			cachedGraphics2D = null;
+		}
+
+		// 清空新的 backBuffer（关键！避免半透明内容残留导致拖影）
+		Graphics2D cleaner = backBuffer.createGraphics();
+		cleaner.setBackground(new java.awt.Color(0, 0, 0, 0));
+		cleaner.clearRect(0, 0, SysConfig.viewportWidth, SysConfig.viewportHeight);
+		cleaner.dispose();
+
+		// 更新 canvas 引用（指向已完成的前缓冲）
+		canvas = frontBuffer;
+	}
+	// ========== 渲染优化结束 ==========
+
+	// ========== 性能优化：地形颜色缓存 ==========
+	/** 地形类型颜色缓存（避免每帧重复创建Color对象） */
+	private static final java.awt.Color COLOR_WATER = new java.awt.Color(0, 100, 255);
+	private static final java.awt.Color COLOR_ROAD = new java.awt.Color(128, 128, 128);
+	private static final java.awt.Color COLOR_ROCK = new java.awt.Color(80, 80, 80);
+	private static final java.awt.Color COLOR_BEACH = new java.awt.Color(240, 220, 140);
+	private static final java.awt.Color COLOR_CLEAR = new java.awt.Color(144, 238, 144);
+
+	/** 覆盖物颜色缓存 */
+	private static final java.awt.Color COLOR_TREE_GREEN = new java.awt.Color(34, 139, 34);
+	private static final java.awt.Color COLOR_TREE_TRUNK = new java.awt.Color(101, 67, 33);
+	private static final java.awt.Color COLOR_TIBERIUM = new java.awt.Color(0, 255, 127);
+	private static final java.awt.Color COLOR_TIBERIUM_GLOW = new java.awt.Color(200, 255, 200);
+	private static final java.awt.Color COLOR_ROCK_OBSTACLE = new java.awt.Color(105, 105, 105);
+	private static final java.awt.Color COLOR_ROCK_DARK = new java.awt.Color(80, 80, 80);
+	private static final java.awt.Color COLOR_CRATE = new java.awt.Color(205, 133, 63);
+	private static final java.awt.Color COLOR_CRATE_BORDER = new java.awt.Color(139, 90, 43);
+
+	/** AlphaComposite 缓存（避免重复创建） */
+	private static final java.awt.AlphaComposite COMPOSITE_WATER =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
+	private static final java.awt.AlphaComposite COMPOSITE_ROAD =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.3f);
+	private static final java.awt.AlphaComposite COMPOSITE_ROCK =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.5f);
+	private static final java.awt.AlphaComposite COMPOSITE_BEACH =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
+	private static final java.awt.AlphaComposite COMPOSITE_CLEAR =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.2f);
+	private static final java.awt.AlphaComposite COMPOSITE_TREE =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.8f);
+	private static final java.awt.AlphaComposite COMPOSITE_TIBERIUM =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.9f);
+	private static final java.awt.AlphaComposite COMPOSITE_ROCK_OBSTACLE =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.85f);
+	private static final java.awt.AlphaComposite COMPOSITE_CRATE =
+		java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.9f);
+	// ========== 性能优化结束 ==========
 	
 	
 	/**
@@ -295,60 +406,79 @@ public class MainPanel extends GLJPanel{
 	 */
 	public void drawTerrain(GLAutoDrawable drawable,int viewportOffX,int viewportOffY) {
 
-
-
 		if(!terrainImageList.isEmpty()) {
-			Graphics2D g2d = canvas.createGraphics();
+			// 性能监控：开始地形渲染计时
+			long terrainStart = redAlert.utils.PerformanceMonitor.startOperation("地形渲染");
 
-			// 绘制所有中心点（包括一类和二类）
-			java.util.List<CenterPoint> allCenterPoints = new java.util.ArrayList<>();
+			// 优化：使用缓存的 Graphics2D 对象,避免每帧重复创建
+			Graphics2D g2d = getCachedGraphics2D();
 
-			// 收集一类中心点
-			for(int m=0;m<50;m++) {
-				int y = 15+30*m;
-				for(int n=0;n<50;n++) {
-					int x = 30+60*n;
+			// 优化：计算可见的瓦片范围，避免遍历所有2500个点
+			int viewportWidth = SysConfig.viewportWidth;
+			int viewportHeight = SysConfig.viewportHeight;
+			int tileSize = 60;  // 地形瓦片大小
+
+			// 计算可见范围（瓦片坐标）
+			// 注意：需要除以实际的瓦片间距，而不是简单的 tileSize
+			// 一类中心点：x 间距 60，y 间距 30
+			// 二类中心点：x 间距 60，y 间距 30
+			int startTileX = Math.max(0, (viewportOffX - 100) / 60);
+			int startTileY = Math.max(0, (viewportOffY - 100) / 30);
+			int endTileX = Math.min(50, (viewportOffX + viewportWidth + 200) / 60 + 1);
+			int endTileY = Math.min(50, (viewportOffY + viewportHeight + 200) / 30 + 1);
+
+			// 绘制一类中心点（偏移坐标：x=30+60*n, y=15+30*m）
+			for(int m = startTileY; m < endTileY; m++) {
+				int y = 15 + 30 * m;
+				// 检查这个 Y 是否在视口内
+				if (y < viewportOffY - 100 || y > viewportOffY + viewportHeight + 100) {
+					continue;
+				}
+
+				for(int n = startTileX; n < endTileX; n++) {
+					int x = 30 + 60 * n;
 					CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
 					if(cp != null) {
-						allCenterPoints.add(cp);
+						int drawX = x - 30 - viewportOffX;
+						int drawY = y - 15 - viewportOffY;
+						g2d.drawImage(terrainImageList.get(cp.getTileIndex()), drawX, drawY, null);
+						// 恢复地形效果,但已注释掉覆盖物
+						drawTerrainEffect(g2d, cp, drawX, drawY);
 					}
 				}
 			}
 
-			// 收集二类中心点
-			for(int m=0;m<50;m++) {
-				int y = 30*m;
-				for(int n=0;n<50;n++) {
-					int x = 60*n;
+			// 绘制二类中心点（对齐坐标：x=60*n, y=30*m）
+			for(int m = startTileY; m < endTileY; m++) {
+				int y = 30 * m;
+				// 检查这个 Y 是否在视口内
+				if (y < viewportOffY - 100 || y > viewportOffY + viewportHeight + 100) {
+					continue;
+				}
+
+				for(int n = startTileX; n < endTileX; n++) {
+					int x = 60 * n;
 					CenterPoint cp = PointUtil.fetchCenterPoint(x, y);
 					if(cp != null) {
-						allCenterPoints.add(cp);
+						int drawX = x - 30 - viewportOffX;
+						int drawY = y - 15 - viewportOffY;
+						g2d.drawImage(terrainImageList.get(cp.getTileIndex()), drawX, drawY, null);
+						// 恢复地形效果,但已注释掉覆盖物
+						drawTerrainEffect(g2d, cp, drawX, drawY);
 					}
 				}
 			}
 
-			// 绘制地形
-			for(CenterPoint cp : allCenterPoints) {
-				int cpx = cp.getX();
-				int cpy = cp.getY();
+			// 优化：不再 dispose Graphics2D,而是复用
+			// g2d.dispose();  // 移除 dispose 调用
 
-				// 视口剔除优化
-				if(cpx >= viewportOffX-100 && cpx <= viewportOffX+SysConfig.viewportWidth+100 &&
-				   cpy >= viewportOffY-100 && cpy < viewportOffY+SysConfig.viewportHeight+100) {
+			// 性能监控：结束地形渲染计时
+			redAlert.utils.PerformanceMonitor.endOperation("地形渲染", terrainStart);
 
-					int drawX = cp.getX()-30-viewportOffX;
-					int drawY = cp.getY()-15-viewportOffY;
+			// 双缓冲：交换缓冲区,显示完成的后缓冲
+			swapCanvasBuffers();
 
-					// 绘制基础瓦片
-					g2d.drawImage(terrainImageList.get(cp.getTileIndex()), drawX, drawY, null);
-
-					// 根据地形类型添加视觉效果
-					drawTerrainEffect(g2d, cp, drawX, drawY);
-				}
-			}
-
-			g2d.dispose();
-
+			// 绘制到 OpenGL 纹理
 			DrawableUtil.drawOneImgAtPosition(drawable, canvas, 0, 0, 0, 0);
 
 		}else {
@@ -359,68 +489,73 @@ public class MainPanel extends GLJPanel{
 	}
 
 	/**
-	 * 绘制地形类型的视觉效果
+	 * 绘制地形类型的视觉效果（性能优化版）
+	 *
+	 * 优化说明：
+	 * 1. 移除了不必要的 Composite 保存/恢复操作
+	 * 2. 添加快速路径跳过空地形
+	 * 3. 减少方法调用开销
 	 */
 	private void drawTerrainEffect(Graphics2D g2d, CenterPoint cp, int x, int y) {
-		// 保存原始合成模式
-		java.awt.Composite originalComposite = g2d.getComposite();
-
-		try {
-			// 处理覆盖物（先绘制覆盖物，因为它们在地形之上）
-			if(cp.overlayType != OverlayType.None) {
-				drawOverlay(g2d, cp, x, y);
-			}
-
-			// 处理地形类型的视觉效果（半透明覆盖层）
-			drawTerrainTypeEffect(g2d, cp, x, y);
-
-		} finally {
-			// 恢复原始合成模式
-			g2d.setComposite(originalComposite);
+		// 快速路径：跳过野地且无覆盖物的情况（最常见）
+		if((cp.terrainType == null || cp.terrainType == TerrainType.Rough)
+				&& cp.overlayType == OverlayType.None) {
+			return;
 		}
+
+		// 处理覆盖物（先绘制覆盖物，因为它们在地形之上）
+		if(cp.overlayType != OverlayType.None) {
+			drawOverlay(g2d, cp, x, y);
+		}
+
+		// 处理地形类型的视觉效果（半透明覆盖层）
+		drawTerrainTypeEffect(g2d, cp, x, y);
 	}
 
 	/**
-	 * 绘制地形类型的颜色效果
+	 * 绘制地形类型的颜色效果（修复版）
+	 *
+	 * 修复说明：
+	 * 1. 每次绘制前重置 Composite,避免透明度叠加
+	 * 2. 使用带 Alpha 的 Color 对象替代 AlphaComposite
+	 * 3. 确保每个瓦片的颜色独立绘制,不相互影响
 	 */
 	private void drawTerrainTypeEffect(Graphics2D g2d, CenterPoint cp, int x, int y) {
 		if(cp.terrainType == null) {
 			return;
 		}
 
+		// 关键修复:每次绘制前重置 Composite 为默认值
+		g2d.setComposite(java.awt.AlphaComposite.SrcOver);
+
 		switch(cp.terrainType) {
 			case Water:
-				// 水面 - 蓝色半透明层
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f));
-				g2d.setColor(new java.awt.Color(0, 100, 255));
+				// 水面 - 蓝色半透明层 (40% 透明度)
+				g2d.setColor(new java.awt.Color(0, 100, 255, 102)); // Alpha = 40% of 255
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Road:
-				// 道路 - 灰色半透明层
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.3f));
-				g2d.setColor(new java.awt.Color(128, 128, 128));
+				// 道路 - 灰色半透明层 (30% 透明度)
+				g2d.setColor(new java.awt.Color(128, 128, 128, 76)); // Alpha = 30% of 255
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Rock:
-				// 岩石 - 深灰色半透明层
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.5f));
-				g2d.setColor(new java.awt.Color(80, 80, 80));
+				// 岩石 - 深灰色半透明层 (50% 透明度)
+				g2d.setColor(new java.awt.Color(80, 80, 80, 127)); // Alpha = 50% of 255
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Beach:
-				// 沙滩 - 黄色半透明层
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f));
-				g2d.setColor(new java.awt.Color(240, 220, 140));
+				// 沙滩 - 黄色半透明层 (40% 透明度)
+				g2d.setColor(new java.awt.Color(240, 220, 140, 102)); // Alpha = 40% of 255
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
 			case Clear:
-				// 干净地面 - 略微亮一点的绿色调
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.2f));
-				g2d.setColor(new java.awt.Color(144, 238, 144));
+				// 干净地面 - 略微亮一点的绿色调 (20% 透明度)
+				g2d.setColor(new java.awt.Color(144, 238, 144, 51)); // Alpha = 20% of 255
 				g2d.fillRect(x, y, 60, 30);
 				break;
 
@@ -432,64 +567,68 @@ public class MainPanel extends GLJPanel{
 	}
 
 	/**
-	 * 绘制覆盖物
+	 * 绘制覆盖物（修复版）
+	 *
+	 * 修复说明：
+	 * 1. 每次绘制前重置 Composite,避免透明度叠加
+	 * 2. 使用带 Alpha 的 Color 对象替代 AlphaComposite
+	 * 3. 确保每个覆盖物的颜色独立绘制,不相互影响
 	 */
 	private void drawOverlay(Graphics2D g2d, CenterPoint cp, int x, int y) {
 		if(cp.overlayType == null) {
 			return;
 		}
 
+		// 关键修复:每次绘制前重置 Composite 为默认值
+		g2d.setComposite(java.awt.AlphaComposite.SrcOver);
+
 		switch(cp.overlayType) {
 			case Tree:
-				// 树木 - 绘制绿色三角形
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.8f));
-				g2d.setColor(new java.awt.Color(34, 139, 34));
+				// 树木 - 绘制绿色三角形 (80% 不透明度)
+				g2d.setColor(new java.awt.Color(34, 139, 34, 204)); // Alpha = 80% of 255
 
 				// 绘制简单的树形（三角形）
 				int[] xPoints = {x + 30, x + 15, x + 45};
 				int[] yPoints = {y + 5, y + 28, y + 28};
 				g2d.fillPolygon(xPoints, yPoints, 3);
 
-				// 树干
-				g2d.setColor(new java.awt.Color(101, 67, 33));
+				// 树干 (完全不透明)
+				g2d.setColor(new java.awt.Color(101, 67, 33, 255)); // Alpha = 100%
 				g2d.fillRect(x + 28, y + 25, 4, 5);
 				break;
 
 			case Tiberium:
-				// 矿石 - 绘制绿色菱形
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.9f));
-				g2d.setColor(new java.awt.Color(0, 255, 127));
+				// 矿石 - 绘制绿色菱形 (90% 不透明度)
+				g2d.setColor(new java.awt.Color(0, 255, 127, 229)); // Alpha = 90% of 255
 
 				// 绘制菱形矿石
 				int[] txPoints = {x + 30, x + 20, x + 30, x + 40};
 				int[] tyPoints = {y + 8, y + 15, y + 22, y + 15};
 				g2d.fillPolygon(txPoints, tyPoints, 4);
 
-				// 闪烁效果
-				g2d.setColor(new java.awt.Color(200, 255, 200));
+				// 闪烁效果 (完全亮色,不透明)
+				g2d.setColor(new java.awt.Color(200, 255, 200, 255)); // Alpha = 100%
 				g2d.fillRect(x + 28, y + 13, 4, 4);
 				break;
 
 			case Rock:
-				// 岩石障碍 - 绘制灰色圆形
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.85f));
-				g2d.setColor(new java.awt.Color(105, 105, 105));
+				// 岩石障碍 - 绘制灰色圆形 (85% 不透明度)
+				g2d.setColor(new java.awt.Color(105, 105, 105, 216)); // Alpha = 85% of 255
 				g2d.fillOval(x + 15, y + 8, 30, 18);
 
-				// 岩石纹理
-				g2d.setColor(new java.awt.Color(80, 80, 80));
+				// 岩石纹理 (完全不透明)
+				g2d.setColor(new java.awt.Color(80, 80, 80, 255)); // Alpha = 100%
 				g2d.fillOval(x + 20, y + 10, 8, 6);
 				g2d.fillOval(x + 32, y + 14, 6, 5);
 				break;
 
 			case Crate:
-				// 箱子 - 绘制棕色矩形
-				g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.9f));
-				g2d.setColor(new java.awt.Color(205, 133, 63));
+				// 箱子 - 绘制棕色矩形 (90% 不透明度)
+				g2d.setColor(new java.awt.Color(205, 133, 63, 229)); // Alpha = 90% of 255
 				g2d.fillRect(x + 22, y + 10, 16, 12);
 
-				// 箱子边框
-				g2d.setColor(new java.awt.Color(139, 90, 43));
+				// 箱子边框 (完全不透明)
+				g2d.setColor(new java.awt.Color(139, 90, 43, 255)); // Alpha = 100%
 				g2d.drawRect(x + 22, y + 10, 16, 12);
 				g2d.drawLine(x + 22, y + 10, x + 38, y + 22);
 				g2d.drawLine(x + 38, y + 10, x + 22, y + 22);
@@ -511,9 +650,12 @@ public class MainPanel extends GLJPanel{
 	 * 其中调用repaint方法后,系统SWT线程会稍后更新JPanel中显示的内容
 	 */
 	public void drawMainInterface(GLAutoDrawable drawable,int viewportOffX,int viewportOffY) {
+		// 性能监控：开始单位渲染计时
+		long unitsStart = redAlert.utils.PerformanceMonitor.startOperation("单位渲染");
+
 		PriorityQueue<ShapeUnit> drawShapeUnitList  = null;
-		
-		
+
+
 		/**
 		 * 这样保证获取缓存队列与获取绘制队列间不冲突
 		 * 保证在绘制时,其他线程可以向缓存队列中放置内容
@@ -527,13 +669,31 @@ public class MainPanel extends GLJPanel{
 				break;
 			}
 		}
-			
+
+		// 视口边界缓存（避免重复计算）
+		int viewMinX = viewportOffX - 200;
+		int viewMinY = viewportOffY - 200;
+		int viewMaxX = viewportOffX + SysConfig.viewportWidth + 200;
+		int viewMaxY = viewportOffY + SysConfig.viewportHeight + 200;
+
 		if(!drawShapeUnitList.isEmpty()) {
-			
-			Graphics2D g2d = canvas.createGraphics();
-			
+
+			// 优化：使用缓存的 Graphics2D 对象,避免每帧重复创建
+			Graphics2D g2d = getCachedGraphics2D();
+
 			while(!drawShapeUnitList.isEmpty()) {
 				ShapeUnit shp = drawShapeUnitList.poll();
+
+				// 性能优化：添加视口剔除，避免渲染屏幕外的单位
+				int unitX = shp.getPositionX();
+				int unitY = shp.getPositionY();
+
+				// 粗略剔除（基于单位位置）
+				if (unitX < viewMinX || unitX > viewMaxX || unitY < viewMinY || unitY > viewMaxY) {
+					RuntimeParameter.addUnitToQueue(shp);
+					continue;
+				}
+
 				if(shp instanceof AfWeap) {
 					AfWeap afweap = (AfWeap)shp;
 					/**
@@ -552,16 +712,16 @@ public class MainPanel extends GLJPanel{
 							RuntimeParameter.addUnitToQueue(shp);//放回规划队列
 						}
 					}else{//子建筑
-						
+
 						DrawableUtil.drawOneShpAtPosition(drawable, shp, viewportOffX, viewportOffY);
 						RuntimeParameter.addUnitToQueue(shp);//放回规划队列
 					}
 				}else {
-					
+
 					if(shp.isVisible()) {
-						
+
 						DrawableUtil.drawOneShpAtPosition(drawable, shp, viewportOffX, viewportOffY);
-						
+
 						//画移动线
 						if(shp instanceof MoveLine) {
 							MoveLine ml = (MoveLine)shp;
@@ -571,23 +731,28 @@ public class MainPanel extends GLJPanel{
 								int starty = plan.getUnit().getPositionY()+ plan.getUnit().getCenterOffY();
 								int endx = plan.getTargetCp().getX();
 								int endy = plan.getTargetCp().getY();
-								
+
 								int startViewX = CoordinateUtil.getViewportX(startx, viewportOffX);
 								int startViewY = CoordinateUtil.getViewportY(starty, viewportOffY);
 								int endxViewX = CoordinateUtil.getViewportX(endx, viewportOffX);
 								int endxViewY = CoordinateUtil.getViewportY(endy, viewportOffY);
-								
+
 								DrawableUtil.drawMoveLine(drawable, startViewX, startViewY, endxViewX, endxViewY);
 							}
 						}
 					}
 					RuntimeParameter.addUnitToQueue(shp);//放回规划队列
 				}
-				
+
 			}
-			g2d.dispose();
+
+			// 优化：不再 dispose Graphics2D,而是复用
+			// g2d.dispose();  // 移除 dispose 调用
 		}
-			
+
+		// 性能监控：结束单位渲染计时
+		redAlert.utils.PerformanceMonitor.endOperation("单位渲染", unitsStart);
+
 	}
 	
 	/**
@@ -785,6 +950,12 @@ class PanelGlListener implements GLEventListener{
 	 */
 	@Override
 	public void display(GLAutoDrawable drawable) {
+		// 性能监控：记录帧率
+		redAlert.utils.PerformanceMonitor.recordFrame();
+
+		// 性能监控：开始渲染计时
+		long renderStart = redAlert.utils.PerformanceMonitor.startOperation("渲染");
+
 		GL2 gl = drawable.getGL().getGL2();
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);//设置glClear函数调用时覆盖颜色缓冲区的颜色值
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);//清除颜色缓冲区和深度缓冲区
@@ -804,7 +975,10 @@ class PanelGlListener implements GLEventListener{
 		//绘制鼠标指针
 		panel.drawMouseCursor(drawable);
 
-		// 计算FPS
+		// 性能监控：结束渲染计时
+		redAlert.utils.PerformanceMonitor.endOperation("渲染", renderStart);
+
+		// 计算FPS（保留原有的FPS计算逻辑）
 		RuntimeParameter.frameCount++;
 		long currentTime = System.currentTimeMillis();
 		long elapsedTime = currentTime - RuntimeParameter.lastFPSTime;
