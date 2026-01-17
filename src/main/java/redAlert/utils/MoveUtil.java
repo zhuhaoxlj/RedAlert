@@ -59,7 +59,13 @@ public class MoveUtil {
 			int y1 = targetCp.getY()+deltaY;
 			CenterPoint transCp = PointUtil.getCenterPoint(x1, y1);
 			LittleCenterPoint transLcp = LittleCenterPointUtil.getLittleCenterPoint(x1, y1);
-			
+
+			// 添加空指针检查，防止崩溃
+			if(transCp == null || transLcp == null) {
+				System.err.println("警告: 无法为目标位置 (" + x1 + ", " + y1 + ") 找到有效的中心点或小中心点，跳过该单位");
+				continue; // 跳过这个单位
+			}
+
 			if(unit instanceof Soldier) {
 				if(!transLcp.isSoldierCanOn()) {
 					transLcp = LittleCenterPointUtil.findSoldierCanOnLcpNearBy(transLcp,exceptLcps);//如果平移到的目标点有单位,那就在附近找一个可用的点
@@ -70,6 +76,10 @@ public class MoveUtil {
 			if(unit instanceof Vehicle) {
 				if(!transCp.isVehicleCanOn()) {
 					transCp = PointUtil.findVehicleCanOnCpNearBy(transCp,exceptCps);//如果平移到的目标点有单位,那就在附近找一个可用的点
+					if(transCp == null) {
+						System.err.println("警告: 无法为载具找到可用的目标点，跳过该单位");
+						continue;
+					}
 					exceptCps.add(transCp);
 					exceptLcps.add(transCp.getLeftLittleCenterPoint());
 					exceptLcps.add(transCp.getRightLittleCenterPoint());
@@ -132,7 +142,15 @@ public class MoveUtil {
 		}
 		
 		//确认已停止
+		long waitStartTime = System.currentTimeMillis();
+		final long MAX_WAIT_TIME = 5000; // 最大等待5秒,防止卡死
 		while(true) {
+			// 检查超时
+			if(System.currentTimeMillis() - waitStartTime > MAX_WAIT_TIME) {
+				System.err.println("警告: 等待单位停止超时 (" + MAX_WAIT_TIME + "ms),强制继续");
+				break;
+			}
+
 			boolean allStop = true;
 			for(MovePlan plan:movePlanLs) {
 				MovableUnit unit = plan.getUnit();
@@ -146,6 +164,14 @@ public class MoveUtil {
 			}
 			if(allStop) {
 				System.out.println("确认停止");
+				break;
+			}
+
+			// 避免CPU 100%占用,短暂休眠
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 				break;
 			}
 		}
@@ -193,10 +219,18 @@ public class MoveUtil {
 	 */
 	public static void move(MovableUnit moveUnit,CenterPoint targetCp) {
 		createOneMoveLine(targetCp,moveUnit);
-		
+
 		moveUnit.stopFlag = true;
 		//确认已停止
+		long waitStartTime = System.currentTimeMillis();
+		final long MAX_WAIT_TIME = 3000; // 最大等待3秒,防止卡死
 		while(true) {
+			// 检查超时
+			if(System.currentTimeMillis() - waitStartTime > MAX_WAIT_TIME) {
+				System.err.println("警告: 单个单位停止等待超时 (" + MAX_WAIT_TIME + "ms),强制继续");
+				break;
+			}
+
 			if(moveUnit instanceof Vehicle) {
 				Vehicle vehicle = (Vehicle)moveUnit;
 				if(vehicle.nextTarget==null) {
@@ -204,6 +238,14 @@ public class MoveUtil {
 				}
 			}else {
 				//步兵的以后再写
+				break;
+			}
+
+			// 避免CPU 100%占用,短暂休眠
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 				break;
 			}
 		}
@@ -215,7 +257,7 @@ public class MoveUtil {
 			vehicle.setEngineStatus(EngineStatus.Started);
 			moveUnit.moveToTarget(targetCp);
 		}
-		
+
 		if(moveUnit instanceof Soldier) {
 			LittleCenterPoint lcp = PointUtil.getMinDisLCP(moveUnit.getPositionX()+moveUnit.getCenterOffX(), moveUnit.getPositionY()+moveUnit.getCenterOffY(), targetCp);
 			moveUnit.moveToTarget(lcp);
@@ -250,6 +292,12 @@ public class MoveUtil {
 	 * 获取一群可移动单位中位于几何中心的单位
 	 */
 	public static MovableUnit getCenterMovableUnit(List<MovableUnit> units) {
+		// 添加空列表检查，防止除零错误
+		if(units == null || units.isEmpty()) {
+			System.err.println("警告: getCenterMovableUnit 传入的单位列表为空");
+			return null;
+		}
+
 		int xtotal = 0;
 		int ytotal = 0;
 		for(MovableUnit unit: units) {
@@ -258,14 +306,14 @@ public class MoveUtil {
 		}
 		int aveX = xtotal/units.size();
 		int aveY = ytotal/units.size();
-		
+
 		MovableUnit centerUnit = null;
 		int min = 99999999;
-		
+
 		for(MovableUnit unit: units) {
 			int tx = unit.getCenterOffX()+unit.getPositionX();
 			int ty = unit.getCenterOffY()+unit.getPositionY();
-			
+
 			int distance = Math.abs(tx-aveX)* Math.abs(tx-aveX)+ Math.abs(aveY-ty)*Math.abs(aveY-ty);
 			if(distance<min) {
 				min = distance;

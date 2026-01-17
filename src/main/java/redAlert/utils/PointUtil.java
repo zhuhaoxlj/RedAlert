@@ -112,33 +112,55 @@ public class PointUtil {
 	/**
 	 * 找到一个中心点周围一个载具可进入的点   逐渐向外围搜索
 	 * 这个点上不能有别的载具  这个是出兵用的
+	 *
+	 * 性能优化：添加搜索深度限制，防止在密集障碍物区域无限搜索导致卡顿
 	 */
 	public static CenterPoint findVehicleCanOnCpNearBy(CenterPoint cp) {
 		ArrayDeque<CenterPoint> rest = new ArrayDeque<>();
 		rest.add(cp);
 		Set<CenterPoint> haveGet = new HashSet<>();
 		haveGet.add(cp);
-		
+
 		CenterPoint result = null;
-		while(!rest.isEmpty()) {
+		int maxSearchDepth = 50;  // 最大搜索深度，防止树木密集区域卡顿
+		int currentDepth = 0;
+		int nodesInCurrentLevel = 1;
+		int nodesInNextLevel = 0;
+
+		while(!rest.isEmpty() && currentDepth < maxSearchDepth) {
 			CenterPoint start = rest.poll();
+			nodesInCurrentLevel--;
+
 			if(start.isVehicleCanOn()) {
 				return start;
 			}
-			
+
 			List<CenterPoint> neighbors = PointUtil.getNeighbors(start);
 			for(CenterPoint neighbor:neighbors) {
 				if(neighbor.isVehicleCanOn()) {
 					return neighbor;
 				}
-				
+
 				if(!haveGet.contains(neighbor)) {
 					haveGet.add(neighbor);
 					rest.add(neighbor);
+					nodesInNextLevel++;
 				}
 			}
+
+			// 当前层级处理完毕，进入下一层级
+			if(nodesInCurrentLevel == 0) {
+				nodesInCurrentLevel = nodesInNextLevel;
+				nodesInNextLevel = 0;
+				currentDepth++;
+			}
 		}
-		
+
+		// 搜索深度超限，返回 null 避免卡死
+		if(currentDepth >= maxSearchDepth) {
+			System.err.println("警告: findVehicleCanOnCpNearBy 搜索深度超限 (" + maxSearchDepth + ")，目标区域可能障碍物过多");
+		}
+
 		return result;
 	}
 	
@@ -302,29 +324,51 @@ public class PointUtil {
 	/**
 	 * 找到一个中心点周围一个载具可进入的点   逐渐向外围搜索
 	 * 找到的这个点不能是exceptLs中的点
+	 *
+	 * 性能优化：添加搜索深度限制，防止在密集障碍物区域无限搜索导致卡顿
 	 */
 	public static CenterPoint findVehicleCanOnCpNearBy(CenterPoint cp,Set<CenterPoint> exceptLs) {
 		ArrayDeque<CenterPoint> rest = new ArrayDeque<>();
 		rest.add(cp);
 		Set<CenterPoint> haveGet = new HashSet<>();
 		haveGet.add(cp);
-		
+
 		CenterPoint result = null;
-		while(!rest.isEmpty()) {
+		int maxSearchDepth = 50;  // 最大搜索深度，防止树木密集区域卡顿
+		int currentDepth = 0;
+		int nodesInCurrentLevel = 1;
+		int nodesInNextLevel = 0;
+
+		while(!rest.isEmpty() && currentDepth < maxSearchDepth) {
 			CenterPoint start = rest.poll();
+			nodesInCurrentLevel--;
+
 			List<CenterPoint> neighbors = PointUtil.getNeighbors(start);
 			for(CenterPoint neighbor:neighbors) {
 				if(neighbor.isVehicleCanOn() && !exceptLs.contains(neighbor)) {
 					return neighbor;
 				}
-				
+
 				if(!haveGet.contains(neighbor)) {
 					haveGet.add(neighbor);
 					rest.add(neighbor);
+					nodesInNextLevel++;
 				}
 			}
+
+			// 当前层级处理完毕，进入下一层级
+			if(nodesInCurrentLevel == 0) {
+				nodesInCurrentLevel = nodesInNextLevel;
+				nodesInNextLevel = 0;
+				currentDepth++;
+			}
 		}
-		
+
+		// 搜索深度超限，返回 null 避免卡死
+		if(currentDepth >= maxSearchDepth) {
+			System.err.println("警告: findVehicleCanOnCpNearBy (with exceptLs) 搜索深度超限 (" + maxSearchDepth + ")，目标区域可能障碍物过多");
+		}
+
 		return result;
 	}
 	

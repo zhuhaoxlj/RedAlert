@@ -24,29 +24,59 @@ public class LittleCenterPointUtil {
 	/**
 	 * 找到一个小中心点周围一个步兵可进入的点   逐渐向外围搜索
 	 * 找到的这个点不能是exceptLs中的点
+	 *
+	 * 性能优化：添加搜索深度限制，防止在密集障碍物区域无限搜索导致卡顿
 	 */
 	public static LittleCenterPoint findSoldierCanOnLcpNearBy(LittleCenterPoint lcp,Set<LittleCenterPoint> exceptLs) {
+		// 性能监控：开始寻路计时
+		long pathfindStart = PerformanceMonitor.startOperation("寻路");
+
 		ArrayDeque<LittleCenterPoint> rest = new ArrayDeque<>();
 		rest.add(lcp);
 		Set<LittleCenterPoint> haveGet = new HashSet<>();
 		haveGet.add(lcp);
-		
+
 		LittleCenterPoint result = null;
-		while(!rest.isEmpty()) {
+		int maxSearchDepth = 50;  // 最大搜索深度，防止树木密集区域卡顿
+		int currentDepth = 0;
+		int nodesInCurrentLevel = 1;
+		int nodesInNextLevel = 0;
+
+		while(!rest.isEmpty() && currentDepth < maxSearchDepth) {
 			LittleCenterPoint start = rest.poll();
+			nodesInCurrentLevel--;
+
 			List<LittleCenterPoint> neighbors = LittleCenterPointUtil.getNeighbors(start);
 			for(LittleCenterPoint neighbor:neighbors) {
 				if(neighbor.isSoldierCanOn() && !exceptLs.contains(neighbor)) {
+					// 性能监控：结束寻路计时
+					PerformanceMonitor.endOperation("寻路", pathfindStart);
 					return neighbor;
 				}
-				
+
 				if(!haveGet.contains(neighbor)) {
 					haveGet.add(neighbor);
 					rest.add(neighbor);
+					nodesInNextLevel++;
 				}
 			}
+
+			// 当前层级处理完毕，进入下一层级
+			if(nodesInCurrentLevel == 0) {
+				nodesInCurrentLevel = nodesInNextLevel;
+				nodesInNextLevel = 0;
+				currentDepth++;
+			}
 		}
-		
+
+		// 搜索深度超限，返回 null 避免卡死
+		if(currentDepth >= maxSearchDepth) {
+			System.err.println("警告: findSoldierCanOnLcpNearBy 搜索深度超限 (" + maxSearchDepth + ")，目标区域可能障碍物过多");
+		}
+
+		// 性能监控：结束寻路计时（即使失败也记录）
+		PerformanceMonitor.endOperation("寻路", pathfindStart);
+
 		return result;
 	}
 	
@@ -249,21 +279,57 @@ public class LittleCenterPointUtil {
 	 * 获取一个普通坐标对应的小中心点
 	 */
 	public static LittleCenterPoint getLittleCenterPoint(int x1,int y1) {
-		
+
 		CenterPoint centerPoint = PointUtil.getCenterPoint(x1, y1);
+
+		// 添加空指针检查，防止崩溃
+		if(centerPoint == null) {
+			System.err.println("警告: getLittleCenterPoint 无法找到中心点 (" + x1 + ", " + y1 + ")");
+			return null;
+		}
+
 		LittleCenterPoint lcpLeft = centerPoint.getLeftLittleCenterPoint();
+		if(lcpLeft == null) {
+			System.err.println("警告: 中心点 (" + centerPoint.getX() + ", " + centerPoint.getY() + ") 的 leftLittleCenterPoint 为 null");
+			return null;
+		}
+
 		int lx1 = lcpLeft.getX();
 		int ly1 = lcpLeft.getY();
 		int dis1 = (lx1-x1)*(lx1-x1)+(ly1-y1)*(ly1-y1);
+
 		LittleCenterPoint lcpDown = centerPoint.getDownLittleCenterPoint();
+		if(lcpDown == null) {
+			System.err.println("警告: 中心点 (" + centerPoint.getX() + ", " + centerPoint.getY() + ") 的 downLittleCenterPoint 为 null");
+			return lcpLeft; // 返回一个有效的点
+		}
+
 		int lx2 = lcpDown.getX();
 		int ly2 = lcpDown.getY();
 		int dis2 = (lx2-x1)*(lx2-x1)+(ly2-y1)*(ly2-y1);
+
 		LittleCenterPoint lcpUp = centerPoint.getUpLittleCenterPoint();
+		if(lcpUp == null) {
+			System.err.println("警告: 中心点 (" + centerPoint.getX() + ", " + centerPoint.getY() + ") 的 upLittleCenterPoint 为 null");
+			// 在剩下两个点中找最近的
+			int min = Math.min(dis1, dis2);
+			return min == dis1 ? lcpLeft : lcpDown;
+		}
+
 		int lx3 = lcpUp.getX();
 		int ly3 = lcpUp.getY();
 		int dis3 = (lx3-x1)*(lx3-x1)+(ly3-y1)*(ly3-y1);
+
 		LittleCenterPoint lcpRight = centerPoint.getRightLittleCenterPoint();
+		if(lcpRight == null) {
+			System.err.println("警告: 中心点 (" + centerPoint.getX() + ", " + centerPoint.getY() + ") 的 rightLittleCenterPoint 为 null");
+			// 在剩下三个点中找最近的
+			int min = NumberUtils.min(dis1, dis2, dis3);
+			if(min==dis1) return lcpLeft;
+			else if(min==dis2) return lcpDown;
+			else return lcpUp;
+		}
+
 		int lx4 = lcpRight.getX();
 		int ly4 = lcpRight.getY();
 		int dis4 = (lx4-x1)*(lx4-x1)+(ly4-y1)*(ly4-y1);
