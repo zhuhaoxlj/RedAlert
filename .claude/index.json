@@ -1,0 +1,505 @@
+{
+  "metadata": {
+    "projectName": "JavaRedAlert2",
+    "description": "红色警戒2 Java 实现项目",
+    "lastScanTime": "2026-01-17T11:20:17+08:00",
+    "scanVersion": "1.0.0",
+    "scanStrategy": "adaptive_architect_v3"
+  },
+  "statistics": {
+    "totalFiles": 220,
+    "scannedFiles": 45,
+    "coveragePercentage": 20,
+    "totalModules": 12,
+    "documentedModules": 5,
+    "truncated": false
+  },
+  "ignoreRules": {
+    "source": ".gitignore",
+    "patterns": [
+      "target/**",
+      ".git/**",
+      ".github/**",
+      "dist/**",
+      "build/**",
+      ".next/**",
+      "__pycache__/**",
+      "*.lock",
+      "*.log",
+      "*.bin",
+      "*.pdf",
+      "*.png",
+      "*.jpg",
+      "*.jpeg",
+      "*.gif",
+      "*.mp4",
+      "*.zip",
+      "*.tar",
+      "*.gz"
+    ],
+    "ignoredCount": 0
+  },
+  "root": {
+    "path": "/home/ts/Downloads/JavaRedAlert2",
+    "readme": "README.md",
+    "mainEntry": "src/main/java/redAlert/MainTest.java",
+    "buildFile": "pom.xml",
+    "language": "Java",
+    "languageVersion": "1.8",
+    "buildTool": "Maven",
+    "frameworks": [
+      "Swing/AWT",
+      "JOGL (OpenGL)",
+      "Maven"
+    ]
+  },
+  "modules": [
+    {
+      "name": "core",
+      "path": "src/main/java/redAlert",
+      "relativePath": "src/main/java/redAlert",
+      "description": "核心模块：程序入口、渲染引擎、上下文管理",
+      "entryPoints": [
+        "MainTest.main()"
+      ],
+      "keyClasses": [
+        "MainTest",
+        "MainPanel",
+        "MainPanelJava",
+        "GameContext",
+        "Constructor",
+        "SysConfig",
+        "GlobalConfig"
+      ],
+      "interfaces": [],
+      "dependencies": [
+        "redAlert.shapeObjects",
+        "redAlert.event",
+        "redAlert.ui",
+        "redAlert.utils",
+        "redAlert.resourceCenter"
+      ],
+      "hasTests": true,
+      "testClasses": [
+        "Test",
+        "Atest"
+      ],
+      "documented": true,
+      "coverage": {
+        "scanned": 10,
+        "total": 15,
+        "percentage": 67,
+        "gaps": [
+          "MainPanel 渲染逻辑未详细分析",
+          "OpenGL 渲染管线未深入",
+          "事件处理机制未完整覆盖"
+        ]
+      }
+    },
+    {
+      "name": "shapeObjects",
+      "path": "src/main/java/redAlert/shapeObjects",
+      "relativePath": "src/main/java/redAlert/shapeObjects",
+      "description": "形状对象模块：所有可渲染单位的抽象与实现",
+      "entryPoints": [],
+      "keyClasses": [
+        "ShapeUnit",
+        "Building",
+        "Vehicle",
+        "Soldier",
+        "MovableUnit",
+        "TankTurret"
+      ],
+      "interfaces": [
+        "Bloodable",
+        "Attackable",
+        "Turnable",
+        "Expandable"
+      ],
+      "subModules": [
+        "soldier",
+        "vehicle",
+        "animation"
+      ],
+      "dependencies": [
+        "redAlert.utilBean",
+        "redAlert.utils",
+        "redAlert.resourceCenter",
+        "redAlert.enums"
+      ],
+      "hasTests": false,
+      "documented": true,
+      "coverage": {
+        "scanned": 25,
+        "total": 40,
+        "percentage": 63,
+        "gaps": [
+          "具体单位实现（如 GrizTank, Sniper）未详细分析",
+          "动画帧计算逻辑未深入",
+          "攻击与移动算法未完整覆盖"
+        ]
+      }
+    },
+    {
+      "name": "militaryBuildings",
+      "path": "src/main/java/redAlert/militaryBuildings",
+      "relativePath": "src/main/java/redAlert/militaryBuildings",
+      "description": "军事建筑模块：盟军与苏军建筑实现",
+      "entryPoints": [],
+      "keyClasses": [
+        "AfCnst",
+        "AfPowr",
+        "AfPile",
+        "AfWeap",
+        "SfMisl",
+        "AfPill",
+        "AfPris",
+        "AfSam"
+      ],
+      "interfaces": [],
+      "dependencies": [
+        "redAlert.shapeObjects",
+        "redAlert.resourceCenter",
+        "redAlert.enums"
+      ],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 5,
+        "total": 25,
+        "percentage": 20,
+        "gaps": [
+          "大部分建筑类未详细扫描",
+          "建筑特殊功能（如核弹发射）未分析",
+          "建筑状态机未完整覆盖"
+        ]
+      }
+    },
+    {
+      "name": "mapEditor",
+      "path": "src/main/java/redAlert/mapEditor",
+      "relativePath": "src/main/java/redAlert/mapEditor",
+      "description": "地图编辑器模块：地图编辑、生成与地形系统",
+      "entryPoints": [
+        "MapEditorTest.main()",
+        "RandomMapGenerate.generateGrassMap()"
+      ],
+      "keyClasses": [
+        "MapEditorPanel",
+        "RandomMapGenerate",
+        "CompleteMapGenerator",
+        "RichMapGenerator",
+        "Tile",
+        "TerrainJLabel",
+        "MapCenterPoint"
+      ],
+      "interfaces": [],
+      "dependencies": [
+        "redAlert.utils",
+        "redAlert.enums",
+        "redAlert.other"
+      ],
+      "hasTests": true,
+      "testClasses": [
+        "MapEditorTest"
+      ],
+      "documented": true,
+      "coverage": {
+        "scanned": 8,
+        "total": 14,
+        "percentage": 57,
+        "gaps": [
+          "地形拼接算法未深入分析",
+          "地图文件格式未详细说明",
+          "编辑器 UI 组件未完整覆盖"
+        ]
+      }
+    },
+    {
+      "name": "ui",
+      "path": "src/main/java/redAlert/ui",
+      "relativePath": "src/main/java/redAlert/ui",
+      "description": "用户界面模块：右侧选项面板与组件",
+      "entryPoints": [],
+      "keyClasses": [
+        "OptionsPanel",
+        "PowerPanel",
+        "RadarLabel",
+        "RepairLabel",
+        "SellLabel",
+        "UnitPanel00"
+      ],
+      "interfaces": [],
+      "dependencies": [],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 15,
+        "percentage": 0,
+        "gaps": [
+          "UI 组件未扫描",
+          "选项卡切换逻辑未分析",
+          "电力/雷达系统未覆盖"
+        ]
+      }
+    },
+    {
+      "name": "tabIcon",
+      "path": "src/main/java/redAlert/tabIcon",
+      "relativePath": "src/main/java/redAlert/tabIcon",
+      "description": "建造图标模块：建造按钮与事件处理",
+      "entryPoints": [],
+      "keyClasses": [
+        "Tab00Manager",
+        "Tab01Manager",
+        "Tab02Manager",
+        "Tab03Manager",
+        "AfCnstConstBtn"
+      ],
+      "interfaces": [],
+      "subModules": [
+        "tab00",
+        "tab01",
+        "tab02",
+        "tab03"
+      ],
+      "dependencies": [
+        "redAlert.event",
+        "redAlert.militaryBuildings"
+      ],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 35,
+        "percentage": 0,
+        "gaps": [
+          "所有 TabIcon 未扫描",
+          "建造事件触发流程未分析",
+          "图标资源映射未覆盖"
+        ]
+      }
+    },
+    {
+      "name": "utils",
+      "path": "src/main/java/redAlert/utils",
+      "relativePath": "src/main/java/redAlert/utils",
+      "description": "工具类模块：坐标转换、文件读取、绘制工具",
+      "entryPoints": [],
+      "keyClasses": [
+        "PointUtil",
+        "LittleCenterPointUtil",
+        "ShpFileReader",
+        "CanvasPainter",
+        "MoveUtil",
+        "PalFileReader",
+        "WavFileReader",
+        "RandomUtil"
+      ],
+      "interfaces": [],
+      "dependencies": [],
+      "hasTests": true,
+      "testClasses": [
+        "PointUtilTest"
+      ],
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 12,
+        "percentage": 0,
+        "gaps": [
+          "工具类未详细扫描",
+          "坐标转换算法未分析",
+          "SHP 文件解析逻辑未覆盖"
+        ]
+      }
+    },
+    {
+      "name": "utilBean",
+      "path": "src/main/java/redAlert/utilBean",
+      "relativePath": "src/main/java/redAlert/utilBean",
+      "description": "核心数据结构：中心点、寻路豆、移动计划",
+      "entryPoints": [],
+      "keyClasses": [
+        "CenterPoint",
+        "LittleCenterPoint",
+        "XunLuBean",
+        "XunLuBean2",
+        "MovePlan",
+        "SoldierXunLuBean",
+        "FrameCalculateThread"
+      ],
+      "interfaces": [],
+      "dependencies": [],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 12,
+        "percentage": 0,
+        "gaps": [
+          "数据结构未详细分析",
+          "寻路算法未深入",
+          "帧计算线程机制未覆盖"
+        ]
+      }
+    },
+    {
+      "name": "event",
+      "path": "src/main/java/redAlert/event",
+      "relativePath": "src/main/java/redAlert/event",
+      "description": "事件系统模块：建造事件、图标点击事件管理",
+      "entryPoints": [
+        "EventHandlerManager.init()"
+      ],
+      "keyClasses": [
+        "EventHandlerManager",
+        "ConstructEvent",
+        "ConstIconClickEvent",
+        "RaEvent"
+      ],
+      "interfaces": [],
+      "dependencies": [],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 6,
+        "percentage": 0,
+        "gaps": [
+          "事件处理流程未分析",
+          "事件总线机制未覆盖",
+          "处理器注册方式未说明"
+        ]
+      }
+    },
+    {
+      "name": "resourceCenter",
+      "path": "src/main/java/redAlert/resourceCenter",
+      "relativePath": "src/main/java/redAlert/resourceCenter",
+      "description": "资源管理中心：SHP 资源缓存与单位管理",
+      "entryPoints": [],
+      "keyClasses": [
+        "ShapeUnitResourceCenter",
+        "ShpResourceCenter"
+      ],
+      "interfaces": [],
+      "dependencies": [],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 2,
+        "percentage": 0,
+        "gaps": [
+          "资源加载机制未分析",
+          "缓存策略未覆盖",
+          "伤害计算逻辑未说明"
+        ]
+      }
+    },
+    {
+      "name": "enums",
+      "path": "src/main/java/redAlert/enums",
+      "relativePath": "src/main/java/redAlert/enums",
+      "description": "枚举定义模块：阵营、地形、建筑配置等常量",
+      "entryPoints": [],
+      "keyClasses": [
+        "UnitColor",
+        "TerrainType",
+        "ConstConfig",
+        "ConstEnum",
+        "Country",
+        "Direction",
+        "BuildingAreaType",
+        "VehicleEnum",
+        "SoldierEnum"
+      ],
+      "interfaces": [],
+      "dependencies": [],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 15,
+        "percentage": 0,
+        "gaps": [
+          "枚举定义未详细列出",
+          "配置映射关系未分析"
+        ]
+      }
+    },
+    {
+      "name": "other",
+      "path": "src/main/java/redAlert/other",
+      "relativePath": "src/main/java/redAlert/other",
+      "description": "其他组件模块：血条、鼠标、核弹动画等辅助组件",
+      "entryPoints": [],
+      "keyClasses": [
+        "BloodBar",
+        "Mouse",
+        "NuclearBombUp",
+        "NuclearBombDown",
+        "NuclearDie",
+        "Place",
+        "MoveLine"
+      ],
+      "interfaces": [],
+      "dependencies": [],
+      "hasTests": false,
+      "documented": false,
+      "coverage": {
+        "scanned": 0,
+        "total": 20,
+        "percentage": 0,
+        "gaps": [
+          "辅助组件未详细扫描",
+          "核弹动画流程未分析",
+          "血条渲染逻辑未覆盖"
+        ]
+      }
+    }
+  ],
+  "gaps": [
+    {
+      "module": "militaryBuildings",
+      "description": "大部分建筑类未详细扫描",
+      "priority": "medium",
+      "recommendation": "优先扫描核心建筑（AfCnst, AfPowr, SfMisl）的实现细节"
+    },
+    {
+      "module": "utils",
+      "description": "工具类未详细扫描",
+      "priority": "high",
+      "recommendation": "优先扫描 PointUtil, ShpFileReader, CanvasPainter 核心工具类"
+    },
+    {
+      "module": "utilBean",
+      "description": "核心数据结构未详细分析",
+      "priority": "high",
+      "recommendation": "优先扫描 CenterPoint, XunLuBean, MovePlan 数据结构"
+    },
+    {
+      "module": "event",
+      "description": "事件处理流程未分析",
+      "priority": "medium",
+      "recommendation": "扫描 EventHandlerManager 与事件处理器实现"
+    },
+    {
+      "module": "ui/tabIcon",
+      "description": "UI 组件与建造图标未扫描",
+      "priority": "low",
+      "recommendation": "补充 UI 模块文档与 TabIcon 事件流程"
+    }
+  ],
+  "nextSteps": [
+    "补扫 utils 模块核心工具类（PointUtil, ShpFileReader, CanvasPainter）",
+    "补扫 utilBean 模块核心数据结构（CenterPoint, XunLuBean, MovePlan）",
+    "补扫 militaryBuildings 模块核心建筑类（AfCnst, AfPowr, SfMisl, AfWeap）",
+    "补扫 event 模块事件处理机制（EventHandlerManager, ConstructEvent）",
+    "补扫 resourceCenter 模块资源加载逻辑（ShpResourceCenter）",
+    "补充枚举定义文档（列出所有枚举值与配置映射）",
+    "补充 other 模块辅助组件文档（核弹动画、血条系统）"
+  ]
+}
